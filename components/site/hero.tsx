@@ -5,6 +5,26 @@ import { ArrowRight, Play } from "lucide-react";
 import { ChatMockup } from "@/components/site/chat-mockup";
 import { WaitlistModal } from "@/components/site/waitlist-modal";
 
+function KoraLogo() {
+  return (
+    <svg viewBox="0 0 18 18" fill="none" aria-hidden="true" className="h-4 w-4">
+      <path d="M17.1818 17.1818H0.818176V0.818159L17.1818 17.1818Z" fill="url(#kora_paint0_linear)" fillOpacity="0.44" />
+      <path d="M17.1818 0.818192H0.818176V17.1818L17.1818 0.818192Z" fill="#474747" />
+      <path d="M17.1818 0.818192H0.818176V17.1818L17.1818 0.818192Z" fill="url(#kora_paint1_linear)" />
+      <defs>
+        <linearGradient id="kora_paint0_linear" x1="8.99999" y1="17.1818" x2="8.99999" y2="0.818159" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#3C3633" />
+          <stop offset="1" stopColor="#5F5149" />
+        </linearGradient>
+        <linearGradient id="kora_paint1_linear" x1="8.99999" y1="0.818192" x2="8.99999" y2="17.1818" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#3C3633" />
+          <stop offset="1" stopColor="#5F5149" />
+        </linearGradient>
+      </defs>
+    </svg>
+  );
+}
+
 export function Hero({
 }: {
   authenticated: boolean;
@@ -40,6 +60,31 @@ export function Hero({
         <p className="mt-8 max-w-2xl text-balance text-lg text-muted-foreground sm:text-xl">
           O Bido coloca sua marca na resposta — não no banner que ninguém vê.
         </p>
+
+        <div className="mt-8 flex flex-col items-start gap-3">
+          <span className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+            Infraestrutura por:
+          </span>
+          <div className="flex flex-wrap items-center gap-3">
+            <a
+              href="https://solana.com"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center rounded-full border border-white/8 bg-black px-3 py-2 shadow-[0_12px_30px_rgba(0,0,0,0.18)] transition-transform duration-200 hover:-translate-y-0.5"
+            >
+              <img src="/solana-logo.svg" alt="Solana" className="h-5 w-auto" />
+            </a>
+            <a
+              href="https://launch.solana.com/docs/kora"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2 rounded-full border border-border bg-surface/80 px-3 py-2 text-sm font-medium text-foreground/80 backdrop-blur-xl transition-transform duration-200 hover:-translate-y-0.5"
+            >
+              <KoraLogo />
+              <span>Kora</span>
+            </a>
+          </div>
+        </div>
 
         <div className="mt-10 flex flex-col items-start gap-3 sm:flex-row sm:items-center">
           <button

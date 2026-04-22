@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { usePrivy } from "@privy-io/react-auth";
@@ -10,19 +9,6 @@ import { appendMessage, loadThreads, type ChatThread } from "@/lib/chat-store";
 import { BidoChatSidebar } from "@/components/app/bido-chat-sidebar";
 import { AnalyticsArtifactPanel } from "@/components/app/analytics-artifact-panel";
 import { BidoMessageInput } from "@/components/app/bido-message-input";
-
-function GhostLogo() {
-  return (
-    <svg width="28" height="28" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-      <path
-        d="M16 3C9.925 3 5 7.925 5 14v13.5c0 1.1 1.317 1.667 2.117.91L10 25.5l2.883 2.91a1.5 1.5 0 0 0 2.134 0L18 25.5l2.883 2.91a1.5 1.5 0 0 0 2.134 0L26 25.5l1.883 1.91c.8.757 2.117.19 2.117-.91V14C30 7.925 25.075 3 19 3h-3Z"
-        fill="currentColor"
-      />
-      <circle cx="13" cy="14" r="1.6" fill="#000" />
-      <circle cx="20" cy="14" r="1.6" fill="#000" />
-    </svg>
-  );
-}
 
 export default function ChatDetailPage() {
   const params = useParams();
@@ -125,15 +111,19 @@ export default function ChatDetailPage() {
               <Menu className="size-4" />
             </button>
             <div onMouseEnter={() => handleLogoHover(true)} className="hidden md:block">
-              <Link href="/app" className="inline-flex items-center gap-3 text-foreground">
-                <div
-                  className={`flex size-12 items-center justify-center rounded-2xl border border-border bg-surface shadow-[0_10px_30px_rgba(0,0,0,0.3)] transition-all duration-200 ${sidebarOpen ? "bg-surface-2 ring-1 ring-violet/30" : ""
-                    }`}
-                >
-                  <GhostLogo />
-                </div>
+              <button
+                type="button"
+                onClick={() => setSidebarOpen((current) => !current)}
+                className={`inline-flex items-center gap-2 rounded-2xl border px-3 py-2 text-foreground transition-all duration-200 ${
+                  sidebarOpen
+                    ? "border-violet/30 bg-surface-2 ring-1 ring-violet/30"
+                    : "border-border bg-surface hover:bg-surface-2"
+                }`}
+                aria-label="Abrir drawer de chats"
+              >
+                <Menu className="size-4 text-muted-foreground" />
                 <span className="text-lg font-extrabold tracking-tight">BIDO</span>
-              </Link>
+              </button>
             </div>
           </div>
 

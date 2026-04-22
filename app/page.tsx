@@ -60,7 +60,7 @@ const features = [
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div id="top" className="min-h-screen bg-background text-foreground">
       <Navbar authenticated={authenticated} onLogin={login} />
       <main>
         <Hero authenticated={authenticated} onLogin={login} />

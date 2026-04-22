@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { UserPill } from "@privy-io/react-auth/ui";
 import { Menu, X } from "lucide-react";
@@ -13,26 +14,6 @@ const menuItems = [
   { name: "Sobre nós", href: "#" },
 ];
 
-function GhostLogo() {
-  return (
-    <svg
-      width="28"
-      height="28"
-      viewBox="0 0 32 32"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      aria-hidden="true"
-    >
-      <path
-        d="M16 3C9.925 3 5 7.925 5 14v13.5c0 1.1 1.317 1.667 2.117.91L10 25.5l2.883 2.91a1.5 1.5 0 0 0 2.134 0L18 25.5l2.883 2.91a1.5 1.5 0 0 0 2.134 0L26 25.5l1.883 1.91c.8.757 2.117.19 2.117-.91V14C30 7.925 25.075 3 19 3h-3Z"
-        fill="currentColor"
-      />
-      <circle cx="13" cy="14" r="1.6" fill="#000" />
-      <circle cx="20" cy="14" r="1.6" fill="#000" />
-    </svg>
-  );
-}
-
 export function Navbar({
   authenticated,
   onLogin,
@@ -42,6 +23,7 @@ export function Navbar({
 }) {
   const [menuState, setMenuState] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const pathname = usePathname();
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 50);
@@ -62,10 +44,15 @@ export function Navbar({
           )}
         >
           <div className="flex h-16 items-center gap-6 px-6">
-            <Link href="/" aria-label="home" className="flex shrink-0 items-center gap-2 text-foreground">
-              <GhostLogo />
-              <span className="text-lg font-extrabold tracking-tight">BIDO</span>
-            </Link>
+            {pathname === "/" ? (
+              <a href="#top" aria-label="Voltar ao topo" className="flex shrink-0 items-center text-foreground">
+                <span className="text-lg font-extrabold tracking-tight">BIDO</span>
+              </a>
+            ) : (
+              <Link href="/" aria-label="home" className="flex shrink-0 items-center text-foreground">
+                <span className="text-lg font-extrabold tracking-tight">BIDO</span>
+              </Link>
+            )}
 
             <button
               onClick={() => setMenuState((current) => !current)}
