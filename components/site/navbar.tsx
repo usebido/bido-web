@@ -7,7 +7,7 @@ import { Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const menuItems = [
-  { name: "Construa com Bido", href: "#" },
+  { name: "Ads para Agents", href: "/build" },
   { name: "Use Cases", href: "#" },
   { name: "Documentação", href: "#" },
   { name: "Sobre nós", href: "#" },
