@@ -38,7 +38,7 @@ export function Hero({
         </h1>
 
         <p className="mt-8 max-w-2xl text-balance text-lg text-muted-foreground sm:text-xl">
-          O Bido coloca sua marca na resposta. A home continua pública; autenticar com Privy não entra automaticamente no aplicativo.
+          O Bido coloca sua marca na resposta — não no banner que ninguém vê.
         </p>
 
         <div className="mt-10 flex flex-col items-start gap-3 sm:flex-row sm:items-center">
