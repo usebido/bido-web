@@ -4,6 +4,7 @@ import { usePrivy } from "@privy-io/react-auth";
 import { Hero } from "@/components/site/hero";
 import { Navbar } from "@/components/site/navbar";
 import { PricingCalculator } from "@/components/site/pricing-calculator";
+import { TerminalDemo } from "@/components/site/terminal-demo";
 import { Banknote, Gauge, Target, LineChart } from "lucide-react";
 
 function XIcon() {
@@ -64,10 +65,6 @@ const features = [
       <main>
         <Hero authenticated={authenticated} onLogin={login} />
 
-        <section id="pricing" className="border-t border-border/60">
-          <PricingCalculator />
-        </section>
-
         <section className="border-t border-border/60 py-32">
           <div className="mx-auto max-w-6xl px-6">
             <h2 className="max-w-3xl text-4xl font-bold tracking-tight sm:text-5xl">
@@ -94,6 +91,13 @@ const features = [
           </div>
         </section>
 
+        <TerminalDemo />
+
+
+        <section id="pricing" className="border-t border-border/60">
+          <PricingCalculator />
+        </section>
+        
         <footer className="border-t border-border/60 py-12">
           <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-6 text-sm text-muted-foreground">
             <span>© {new Date().getFullYear()} Bido</span>
