@@ -54,7 +54,9 @@ export function BidoChatSearchModal({
   const filteredThreads = threads.filter((thread) =>
     searchTerm.length === 0
       ? true
-      : getCampaignName(thread).toLowerCase().includes(searchTerm.toLowerCase()),
+      : getCampaignName(thread, messages.app.fallbackNewCampaign)
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase()),
   );
 
   const items = useMemo(
