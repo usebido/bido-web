@@ -38,7 +38,7 @@ export function PricingCalculator() {
       <div className="mx-auto max-w-6xl px-6">
         <div className="mb-10 text-left">
           <h2 className="text-balance text-3xl font-bold leading-tight tracking-tight text-foreground sm:text-4xl md:text-[44px]">
-            Veja quanto você pagaria no <span className="text-muted-foreground">Google Ads</span> vs{" "}
+            Compare seu custo no <span className="text-muted-foreground">Google Ads</span> vs{" "}
             <span className="text-violet">Bido.</span>
           </h2>
         </div>

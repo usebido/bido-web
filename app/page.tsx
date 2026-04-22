@@ -5,6 +5,7 @@ import { Hero } from "@/components/site/hero";
 import { Navbar } from "@/components/site/navbar";
 import { PricingCalculator } from "@/components/site/pricing-calculator";
 import { TerminalDemo } from "@/components/site/terminal-demo";
+import { FaqsSection } from "@/components/ui/faqs-1";
 import { Banknote, Gauge, Target, LineChart } from "lucide-react";
 
 function XIcon() {
@@ -97,6 +98,8 @@ const features = [
         <section id="pricing" className="border-t border-border/60">
           <PricingCalculator />
         </section>
+
+        <FaqsSection />
         
         <footer className="border-t border-border/60 py-12">
           <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-6 text-sm text-muted-foreground">
