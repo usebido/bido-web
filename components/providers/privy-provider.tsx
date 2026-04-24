@@ -2,6 +2,7 @@
 
 import { PrivyProvider } from "@privy-io/react-auth";
 import { toSolanaWalletConnectors } from "@privy-io/react-auth/solana";
+import { SyncBridge } from "./sync-bridge";
 
 export default function PrivyAppProvider({
   children,
@@ -34,7 +35,7 @@ export default function PrivyAppProvider({
         },
       }}
     >
-      {children}
+      <SyncBridge>{children}</SyncBridge>
     </PrivyProvider>
   );
 }
