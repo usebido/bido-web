@@ -5,9 +5,10 @@ import { Hero } from "@/components/site/hero";
 import { Navbar } from "@/components/site/navbar";
 import { PricingCalculator } from "@/components/site/pricing-calculator";
 import { TerminalDemo } from "@/components/site/terminal-demo";
+import { ThemeToggle } from "@/components/site/theme-toggle";
 import { FaqsSection } from "@/components/ui/faqs-1";
 import { useI18n } from "@/components/providers/i18n-provider";
-import { Banknote, Gauge, Target, LineChart } from "lucide-react";
+import { Banknote, Shield, Target, LineChart } from "lucide-react";
 
 function XIcon() {
   return (
@@ -32,7 +33,7 @@ export default function SponsorsPage() {
 
   const features = [
     { icon: Banknote, ...sponsors.features[0] },
-    { icon: Gauge, ...sponsors.features[1] },
+    { icon: Shield, ...sponsors.features[1] },
     { icon: Target, ...sponsors.features[2] },
     { icon: LineChart, ...sponsors.features[3] },
   ];
@@ -79,9 +80,6 @@ export default function SponsorsPage() {
           </div>
         </section>
 
-        <TerminalDemo />
-
-
         <section id="pricing" className="border-t border-border/60">
           <PricingCalculator />
         </section>
@@ -92,6 +90,7 @@ export default function SponsorsPage() {
           <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-6 text-sm text-muted-foreground">
             <span>{replace(messages.common.footerCopy, { year: new Date().getFullYear() })}</span>
             <div className="flex items-center gap-3">
+              <ThemeToggle />
               <a
                 href="https://x.com/usebido"
                 target="_blank"

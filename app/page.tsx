@@ -1,36 +1,18 @@
 "use client";
 
-import Link from "next/link";
 import Image from "next/image";
+import { useState } from "react";
 import { usePrivy } from "@privy-io/react-auth";
 import { ArrowRight } from "lucide-react";
 import { Navbar } from "@/components/site/navbar";
 import { useI18n } from "@/components/providers/i18n-provider";
+import { WaitlistModal } from "@/components/site/waitlist-modal";
+import { ThemeToggle } from "@/components/site/theme-toggle";
 
 function XIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" className="size-4">
       <path d="M18.901 1.153h3.68l-8.04 9.19 9.458 12.504h-7.405l-5.8-7.584-6.633 7.584H.48l8.6-9.83L0 1.154h7.594l5.243 6.932 6.064-6.932Zm-1.291 19.492h2.039L6.486 3.24H4.298L17.61 20.645Z" />
-    </svg>
-  );
-}
-
-function KoraLogo() {
-  return (
-    <svg viewBox="0 0 18 18" fill="none" aria-hidden="true" className="h-4 w-4">
-      <path d="M17.1818 17.1818H0.818176V0.818159L17.1818 17.1818Z" fill="url(#kora_paint0_linear)" fillOpacity="0.44" />
-      <path d="M17.1818 0.818192H0.818176V17.1818L17.1818 0.818192Z" fill="#474747" />
-      <path d="M17.1818 0.818192H0.818176V17.1818L17.1818 0.818192Z" fill="url(#kora_paint1_linear)" />
-      <defs>
-        <linearGradient id="kora_paint0_linear" x1="8.99999" y1="17.1818" x2="8.99999" y2="0.818159" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#3C3633" />
-          <stop offset="1" stopColor="#5F5149" />
-        </linearGradient>
-        <linearGradient id="kora_paint1_linear" x1="8.99999" y1="0.818192" x2="8.99999" y2="17.1818" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#3C3633" />
-          <stop offset="1" stopColor="#5F5149" />
-        </linearGradient>
-      </defs>
     </svg>
   );
 }
@@ -43,11 +25,109 @@ function GitHubIcon() {
   );
 }
 
+type Brand = {
+  name: string;
+  tag?: string;
+  logo?: string;
+  quote?: string;
+};
+
+function LogoCell({
+  brand,
+  onHover,
+  onLeave,
+  isHovered,
+}: {
+  brand: Brand;
+  onHover: (brand: Brand) => void;
+  onLeave: () => void;
+  isHovered: boolean;
+}) {
+  const interactive = Boolean(brand.tag);
+
+  return (
+    <div className="relative flex flex-col items-center gap-2">
+      <div className="flex h-14 items-center justify-center">
+        {brand.logo === "solana" ? (
+          <Image
+            src="/solana-black.png"
+            alt="Solana logo"
+            width={96}
+            height={54}
+            className="h-[54px] w-[96px] object-contain dark:brightness-0 dark:invert"
+          />
+        ) : (
+          <div className="flex h-10 items-center text-center text-[20px] font-bold tracking-tight text-foreground/88">
+            {brand.name}
+          </div>
+        )}
+      </div>
+      {brand.tag ? (
+        <button
+          type="button"
+          onMouseEnter={() => interactive && onHover(brand)}
+          onMouseLeave={() => interactive && onLeave()}
+          className="rounded-full border border-violet/20 bg-violet/8 px-2.5 py-0.5 text-[11px] font-medium text-violet transition-colors hover:bg-violet/14"
+        >
+          {brand.tag}
+        </button>
+      ) : null}
+
+      {/* Quote bubble relative to this logo cell */}
+      <div
+        className={`pointer-events-none absolute bottom-full left-1/2 z-50 mb-4 w-72 md:w-96 -translate-x-1/2 transition-all duration-200 ${
+          isHovered ? "translate-y-0 opacity-100" : "translate-y-2 opacity-0"
+        }`}
+      >
+        {brand.quote ? (
+          <div
+            className="rounded-2xl border border-white/50 p-7 text-white shadow-[0_30px_70px_rgba(88,28,135,0.18)]"
+            style={{ backgroundColor: "rgba(124,58,237,0.92)" }}
+          >
+            <div className="mb-4 text-3xl font-black leading-none opacity-90">”</div>
+            <p className="text-[16px] leading-snug">{brand.quote}</p>
+          </div>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+function TrustWall() {
+  const { messages } = useI18n();
+  const [hovered, setHovered] = useState<Brand | null>(null);
+  const useCaseBrands: readonly Brand[] = messages.home.useCases.items;
+
+  return (
+    <section className="px-3 pb-16 sm:px-4">
+      <div className="mx-auto max-w-[1400px]">
+        <p className="mx-auto max-w-2xl text-center text-[12px] font-semibold uppercase leading-relaxed tracking-wider text-muted-foreground">
+          {messages.home.useCases.eyebrow}
+        </p>
+
+        <div className="relative mt-10">
+          <div className="relative z-10 mx-auto grid max-w-md justify-items-center grid-cols-1 gap-12">
+            {useCaseBrands.map((brand) => (
+              <LogoCell
+                key={brand.name}
+                brand={brand}
+                onHover={setHovered}
+                onLeave={() => setHovered(null)}
+                isHovered={hovered?.name === brand.name}
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export default function HomePage() {
   const { ready, authenticated, login } = usePrivy();
   const { messages, replace } = useI18n();
-  const cards = messages.home.audienceCards;
-  const infrastructure = messages.home.infrastructure;
+  const [waitlistOpen, setWaitlistOpen] = useState(false);
+  const [heroEmail, setHeroEmail] = useState("");
 
   if (!ready) {
     return (
@@ -61,155 +141,116 @@ export default function HomePage() {
 
   return (
     <div id="top" className="min-h-screen bg-background text-foreground">
+      <WaitlistModal
+        open={waitlistOpen}
+        onClose={() => setWaitlistOpen(false)}
+        initialEmail={heroEmail}
+      />
       <Navbar authenticated={authenticated} onLogin={login} />
 
       <main>
         {/* ── Hero ── */}
-        <section className="relative overflow-hidden">
-          {/* ambient glow */}
-          <div
-            aria-hidden
-            className="pointer-events-none absolute left-1/2 top-0 -z-10 h-[700px] w-[1200px] -translate-x-1/2 rounded-full opacity-35 blur-3xl"
-            style={{
-              background:
-                "radial-gradient(closest-side, oklch(0.4 0.15 295 / 0.5), transparent 70%)",
-            }}
-          />
+        <section className="px-3 pb-20 pt-24 sm:px-4 sm:pt-28">
+          <div className="relative mx-auto max-w-[1400px] overflow-hidden rounded-[28px] border border-violet/14 bg-surface px-6 pb-14 pt-20 shadow-[0_28px_90px_rgba(88,28,135,0.08)] dark:border-violet/20 dark:shadow-[0_28px_90px_rgba(0,0,0,0.42)] sm:pt-28">
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-0 opacity-90 dark:hidden"
+              style={{
+                background: `
+                  radial-gradient(900px 320px at 50% 0%, rgba(167,139,250,0.16), transparent 72%),
+                  radial-gradient(540px 240px at 12% 88%, rgba(244,114,182,0.1), transparent 68%),
+                  radial-gradient(540px 240px at 88% 88%, rgba(34,197,94,0.09), transparent 68%)
+                `,
+              }}
+            />
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-0 opacity-[0.4] dark:hidden"
+              style={{
+                backgroundImage:
+                  "radial-gradient(1200px 400px at 50% 0%, rgba(255,255,255,0.9), transparent 70%)",
+              }}
+            />
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-0 hidden opacity-90 dark:block"
+              style={{
+                background: `
+                  radial-gradient(900px 320px at 50% 0%, rgba(167,139,250,0.2), transparent 72%),
+                  radial-gradient(540px 240px at 12% 88%, rgba(167,139,250,0.12), transparent 68%),
+                  radial-gradient(540px 240px at 88% 88%, rgba(34,197,94,0.08), transparent 68%)
+                `,
+              }}
+            />
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-0 hidden opacity-[0.24] dark:block"
+              style={{
+                backgroundImage:
+                  "radial-gradient(1200px 400px at 50% 0%, rgba(255,255,255,0.06), transparent 70%)",
+              }}
+            />
+            <div
+              aria-hidden
+              className="pointer-events-none absolute -bottom-16 -left-12 h-64 w-64 rounded-full blur-3xl"
+              style={{ background: "rgba(167,139,250,0.12)" }}
+            />
+            <div
+              aria-hidden
+              className="pointer-events-none absolute -bottom-16 -right-12 h-72 w-72 rounded-full blur-3xl"
+              style={{ background: "rgba(244,114,182,0.1)" }}
+            />
 
-          <div className="mx-auto max-w-[1100px] px-6 pb-32 pt-40 text-center">
-            {/* badge */}
-            <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-violet/30 bg-violet-soft px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-violet">
-              {messages.home.badge}
-            </div>
+            <div className="relative z-10 mx-auto max-w-[1100px] text-center">
+              <h1 className="mx-auto max-w-5xl text-balance font-heading text-[44px] font-extrabold leading-[0.95] tracking-[-0.04em] text-foreground sm:text-[64px] md:text-[84px] lg:text-[96px]">
+                {messages.home.headline}
+              </h1>
 
-            {/* headline — always English per brand copy */}
-            <h1 className="mx-auto max-w-4xl text-balance text-5xl font-bold leading-[1.05] tracking-tight text-foreground sm:text-6xl md:text-7xl lg:text-[80px]">
-              {messages.home.headline}
-            </h1>
+              <p className="mx-auto mt-7 max-w-2xl text-[17px] leading-relaxed text-muted-foreground sm:text-[19px]">
+                {messages.home.subheadline}
+              </p>
 
-            <p className="mx-auto mt-8 max-w-2xl text-balance text-lg text-muted-foreground sm:text-xl">
-              {messages.home.subheadline}
-            </p>
-
-            {/* infrastructure logos */}
-            {/* <div className="mt-10 flex flex-col items-center gap-3">
-                <span className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-                  {messages.hero.infrastructureBy}
-                </span>
-                <div className="flex flex-wrap items-center gap-3">
-                  <a
-                    href="https://solana.com"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center rounded-full border border-white/8 bg-black px-3 py-2 shadow-[0_12px_30px_rgba(0,0,0,0.18)] transition-transform duration-200 hover:-translate-y-0.5"
-                  >
-                    <Image src="/solana-logo.svg" alt={infrastructure.solanaName} width={90} height={20} className="h-5 w-auto" />
-                  </a>
-                  <a
-                    href="https://launch.solana.com/docs/kora"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-2 rounded-full border border-border bg-surface/80 px-3 py-2 text-sm font-medium text-foreground/80 backdrop-blur-xl transition-transform duration-200 hover:-translate-y-0.5"
-                  >
-                    <KoraLogo />
-                    <span>{infrastructure.koraName}</span>
-                  </a>
-                </div>
-              </div> */}
-            
-          </div>
-        </section>
-
-        {/* ── Split Audience Cards ── */}
-        <section className="border-t border-border/60 py-24">
-          <div className="mx-auto max-w-5xl px-6">
-            <div className="grid gap-6 sm:grid-cols-2">
-
-              {/* For Sponsors */}
-              <Link
-                href="/sponsors"
-                className="group relative flex flex-col justify-between overflow-hidden rounded-3xl border border-border bg-surface-2 p-8 transition-all duration-300 hover:-translate-y-1 hover:border-violet/40 hover:shadow-[0_20px_60px_rgba(124,58,237,0.12)]"
+              <form
+                className="mx-auto mt-10 flex h-14 w-full max-w-xl items-center gap-1 overflow-hidden rounded-xl border border-border bg-surface-2/60 p-1 backdrop-blur focus-within:border-violet/50"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  setWaitlistOpen(true);
+                }}
               >
-                {/* subtle corner glow */}
-                <div
-                  aria-hidden
-                  className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full opacity-0 blur-2xl transition-opacity duration-500 group-hover:opacity-30"
-                  style={{ background: "oklch(0.5 0.2 295)" }}
+                <input
+                  type="email"
+                  placeholder={messages.waitlist.form.emailPlaceholder}
+                  value={heroEmail}
+                  onChange={(e) => setHeroEmail(e.target.value)}
+                  className="h-full w-full min-w-0 bg-transparent px-4 text-base text-foreground placeholder:text-muted-foreground focus:outline-none"
                 />
+                <button
+                  type="submit"
+                  className="group relative inline-flex h-full shrink-0 items-center justify-center gap-2 overflow-hidden rounded-lg bg-violet px-6 text-base font-semibold text-violet-foreground shadow-lg shadow-violet/20 transition-colors duration-300 hover:text-black"
+                >
+                  <span
+                    aria-hidden
+                    className="absolute inset-x-0 bottom-0 h-0 bg-white transition-all duration-300 ease-out group-hover:h-full"
+                  />
+                  <span className="relative z-10 inline-flex items-center gap-2">
+                    {messages.hero.waitlist}
+                    <ArrowRight className="h-4 w-4" />
+                  </span>
+                </button>
+              </form>
 
-                <div>
-                  <div className="mb-5 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-violet-soft text-violet">
-                    {/* target icon */}
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="h-5 w-5">
-                      <circle cx="12" cy="12" r="10" />
-                      <circle cx="12" cy="12" r="6" />
-                      <circle cx="12" cy="12" r="2" />
-                    </svg>
-                  </div>
-
-                  <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-violet">
-                    {cards.sponsors.label}
-                  </p>
-                  <h2 className="text-2xl font-bold tracking-tight text-foreground">
-                    {cards.sponsors.title}
-                  </h2>
-                  <p className="mt-3 text-muted-foreground leading-relaxed">
-                    {cards.sponsors.description}
-                  </p>
-                </div>
-
-                <div className="mt-8 inline-flex items-center gap-2 text-sm font-semibold text-violet transition-gap duration-200 group-hover:gap-3">
-                  {cards.sponsors.label}
-                  <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" />
-                </div>
-              </Link>
-
-              {/* For Devs */}
-              <Link
-                href="/devs"
-                className="group relative flex flex-col justify-between overflow-hidden rounded-3xl border border-border bg-surface-2 p-8 transition-all duration-300 hover:-translate-y-1 hover:border-emerald-500/40 hover:shadow-[0_20px_60px_rgba(16,185,129,0.10)]"
-              >
-                {/* subtle corner glow */}
-                <div
-                  aria-hidden
-                  className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full opacity-0 blur-2xl transition-opacity duration-500 group-hover:opacity-20"
-                  style={{ background: "oklch(0.7 0.2 160)" }}
-                />
-
-                <div>
-                  <div className="mb-5 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-400">
-                    {/* code / terminal icon */}
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="h-5 w-5">
-                      <polyline points="16 18 22 12 16 6" />
-                      <polyline points="8 6 2 12 8 18" />
-                    </svg>
-                  </div>
-
-                  <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-400">
-                    {cards.devs.label}
-                  </p>
-                  <h2 className="text-2xl font-bold tracking-tight text-foreground">
-                    {cards.devs.title}
-                  </h2>
-                  <p className="mt-3 text-muted-foreground leading-relaxed">
-                    {cards.devs.description}
-                  </p>
-                </div>
-
-                <div className="mt-8 inline-flex items-center gap-2 text-sm font-semibold text-emerald-400 transition-gap duration-200 group-hover:gap-3">
-                  {cards.devs.label}
-                  <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" />
-                </div>
-              </Link>
             </div>
           </div>
         </section>
+
+        <TrustWall />
 
         {/* ── Footer ── */}
         <footer className="border-t border-border/60 py-12">
           <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-6 text-sm text-muted-foreground">
             <span>{replace(messages.common.footerCopy, { year: new Date().getFullYear() })}</span>
             <div className="flex items-center gap-3">
+              <ThemeToggle />
               <a
                 href="https://x.com/usebido"
                 target="_blank"

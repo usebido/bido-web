@@ -7,6 +7,7 @@ import { AgentRevenueCalculator } from "@/components/site/agent-revenue-calculat
 import { InstallTerminal } from "@/components/site/install-terminal";
 import { Navbar } from "@/components/site/navbar";
 import { HowItWorks } from "@/components/site/how-it-works";
+import { ThemeToggle } from "@/components/site/theme-toggle";
 import { FaqsSection } from "@/components/ui/faqs-1";
 
 function XIcon() {
@@ -104,6 +105,7 @@ export function DevsPage() {
           <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-6 text-sm text-muted-foreground">
             <span>{replace(messages.common.footerCopy, { year: new Date().getFullYear() })}</span>
             <div className="flex items-center gap-3">
+              <ThemeToggle />
               <a
                 href="https://x.com/usebido"
                 target="_blank"

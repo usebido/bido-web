@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { UserPill } from "@privy-io/react-auth/ui";
 import { Menu, X } from "lucide-react";
 import { useI18n } from "@/components/providers/i18n-provider";
+import { UseCasesMegaMenu } from "@/components/site/use-cases-mega-menu";
 import { cn } from "@/lib/utils";
 
 export function Navbar({
@@ -17,6 +18,8 @@ export function Navbar({
 }) {
   const [menuState, setMenuState] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [openMenu, setOpenMenu] = useState<string | null>(null);
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pathname = usePathname();
   const loginEnabled = process.env.NEXT_PUBLIC_LOGIN_ENABLED === "true";
   const { locale, setLocale, localeLabels, messages } = useI18n();
@@ -35,6 +38,16 @@ export function Navbar({
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  const openMegaMenu = (item: string) => {
+    if (closeTimer.current) clearTimeout(closeTimer.current);
+    setOpenMenu(item);
+  };
+
+  const scheduleCloseMegaMenu = () => {
+    if (closeTimer.current) clearTimeout(closeTimer.current);
+    closeTimer.current = setTimeout(() => setOpenMenu(null), 120);
+  };
+
   return (
     <header className="fixed top-0 z-50 w-full">
       <nav data-state={menuState ? "active" : undefined} className="w-full px-4 pt-3">
@@ -42,7 +55,7 @@ export function Navbar({
           className={cn(
             "mx-auto max-w-7xl rounded-full border transition-[background-color,border-color,box-shadow] duration-500 ease-out",
             isScrolled
-              ? "border-border/70 bg-background/70 shadow-[0_8px_30px_rgba(0,0,0,0.45)] backdrop-blur-xl"
+              ? "border-border/80 bg-background/88 shadow-[0_12px_40px_rgba(88,28,135,0.08)] backdrop-blur-xl dark:border-white/8 dark:bg-background/80 dark:shadow-[0_12px_40px_rgba(0,0,0,0.45)]"
               : "border-transparent bg-transparent shadow-none",
           )}
         >
@@ -67,16 +80,34 @@ export function Navbar({
 
             <nav className="hidden flex-1 justify-center lg:flex">
               <ul className="flex items-center gap-1">
-                {menuItems.map((item) => (
-                  <li key={item.name}>
-                    <Link
-                      href={item.href}
-                      className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground transition-colors hover:bg-foreground/10 hover:text-foreground"
+                {menuItems.map((item) => {
+                  const hasMenu = item.name === messages.navbar.useCases;
+
+                  return (
+                    <li
+                      key={item.name}
+                      className="relative"
+                      onMouseEnter={() => hasMenu && openMegaMenu(item.name)}
+                      onMouseLeave={() => hasMenu && scheduleCloseMegaMenu()}
                     >
-                      {item.name}
-                    </Link>
-                  </li>
-                ))}
+                      {hasMenu ? (
+                        <button
+                          type="button"
+                          className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground transition-colors hover:bg-foreground/10 hover:text-foreground"
+                        >
+                          {item.name}
+                        </button>
+                      ) : (
+                        <Link
+                          href={item.href}
+                          className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground transition-colors hover:bg-foreground/10 hover:text-foreground"
+                        >
+                          {item.name}
+                        </Link>
+                      )}
+                    </li>
+                  );
+                })}
               </ul>
             </nav>
 
@@ -118,7 +149,28 @@ export function Navbar({
                 </button>
               )}
             </div>
+        </div>
+
+        <div
+          className={`hidden lg:block ${openMenu === messages.navbar.useCases ? "pointer-events-auto" : "pointer-events-none"}`}
+          onMouseEnter={() => openMegaMenu(messages.navbar.useCases)}
+          onMouseLeave={scheduleCloseMegaMenu}
+        >
+          <div
+            className={cn(
+              "absolute left-0 right-0 top-full pt-3 transition-all duration-200",
+              openMenu === messages.navbar.useCases
+                ? "translate-y-0 opacity-100"
+                : "-translate-y-2 opacity-0",
+            )}
+          >
+            <div className="mx-auto max-w-[1100px] px-6">
+              <div className="overflow-hidden rounded-3xl border border-border bg-background/96 shadow-2xl backdrop-blur-xl">
+                <UseCasesMegaMenu />
+              </div>
+            </div>
           </div>
+        </div>
 
           {menuState && (
             <div className="rounded-2xl border-t border-border bg-background/95 p-6 lg:hidden">

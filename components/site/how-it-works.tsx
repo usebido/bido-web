@@ -27,6 +27,7 @@ type Step = {
   title: string;
   description: string;
   code?: string;
+  codeLabel?: string;
   codeType: "query" | "response" | "none";
 };
 
@@ -72,31 +73,23 @@ function StepCard({ step, index, visible }: { step: Step; index: number; visible
           className={`mt-auto rounded-xl border px-4 py-3 font-mono text-[12px] leading-relaxed ${
             isQuery
               ? "border-border/60 bg-surface text-muted-foreground"
-              : "border-emerald-500/20 bg-emerald-950/30 text-emerald-400"
+              : "border-emerald-500/20 bg-emerald-50 text-emerald-700"
           }`}
         >
           {!isQuery && (
-            <span className="mb-1.5 block text-[10px] font-semibold uppercase tracking-widest text-emerald-500/70">
-              resposta patrocinada
+            <span className="mb-1.5 block text-[10px] font-semibold uppercase tracking-widest text-emerald-600/80">
+              {step.codeLabel ?? "sponsored response"}
             </span>
           )}
           {step.code}
         </div>
       )}
 
-      {/* Step 03: 402 badge visual */}
-      {step.number === "03" && (
-        <div className="mt-auto inline-flex w-fit items-center gap-2 rounded-lg border border-violet/25 bg-violet-soft px-3 py-1.5">
-          <span className="font-mono text-xs font-bold text-violet">402</span>
-          <span className="text-[11px] text-muted-foreground">Payment Required</span>
-        </div>
-      )}
-
       {/* Step 06: USDC visual */}
       {step.number === "06" && (
-        <div className="mt-auto inline-flex w-fit items-center gap-2 rounded-lg border border-emerald-500/20 bg-emerald-950/30 px-3 py-1.5">
-          <span className="size-2 rounded-full bg-emerald-400 shadow-[0_0_6px_2px_oklch(0.7_0.18_150_/_0.4)]" />
-          <span className="font-mono text-xs font-semibold text-emerald-400">USDC → Solana</span>
+        <div className="mt-auto inline-flex w-fit items-center gap-2 rounded-lg border border-emerald-500/20 bg-emerald-50 px-3 py-1.5">
+          <span className="size-2 rounded-full bg-emerald-500 shadow-[0_0_6px_2px_oklch(0.82_0.12_150_/_0.35)]" />
+          <span className="font-mono text-xs font-semibold text-emerald-700">USDC settlement</span>
         </div>
       )}
     </div>

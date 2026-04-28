@@ -25,9 +25,11 @@ const EMPTY: FormState = {
 export function WaitlistModal({
   open,
   onClose,
+  initialEmail = "",
 }: {
   open: boolean;
   onClose: () => void;
+  initialEmail?: string;
 }) {
   const { messages } = useI18n();
   const [form, setForm] = useState<FormState>(EMPTY);
@@ -54,6 +56,7 @@ export function WaitlistModal({
   useEffect(() => {
     if (open) {
       document.body.style.overflow = "hidden";
+      setForm((current) => ({ ...current, email: initialEmail }));
       setTimeout(() => firstRef.current?.focus(), 80);
     } else {
       document.body.style.overflow = "";
@@ -61,7 +64,7 @@ export function WaitlistModal({
     return () => {
       document.body.style.overflow = "";
     };
-  }, [open]);
+  }, [initialEmail, open]);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {

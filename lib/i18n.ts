@@ -35,9 +35,9 @@ export const messages = {
       socialGitHub: "GitHub",
     },
     navbar: {
-      adsForAgents: "Para Patrocinadores",
-      forDevs: "Para Devs",
-      useCases: "Use Cases",
+      adsForAgents: "Anuncie",
+      forDevs: "Monetizar",
+      useCases: "Casos de uso",
       docs: "Documentação",
       about: "Sobre nós",
       openMenu: "Abrir menu",
@@ -55,9 +55,21 @@ export const messages = {
       requestPresentation: "Solicitar apresentação",
     },
     home: {
-      badge: "Devnet on Solana",
-      headline: "A camada de monetização para a economia dos agentes",
-      subheadline: "A Bido conecta patrocinadores que querem alcançar usuários no momento da decisão e desenvolvedores que querem monetizar agentes de IA, copilots e produtos com LLM.",
+      headline: "A plataforma de anúncios para a economia dos agentes.",
+      subheadline:
+        "A Bido ajuda produtos de IA a monetizar tráfego de agentes e ajuda patrocinadores a conquistar clientes no momento da decisão.",
+      useCases: {
+        eyebrow: "Use cases criados pelo time da Bido.",
+        items: [
+          {
+            name: "Solana",
+            tag: "Caso de estudo",
+            logo: "solana",
+            quote:
+              "Como a Solana pode transformar a intenção de builders dentro de ferramentas de coding com IA em crescimento de ecossistema por meio de incentivos instantâneos.",
+          },
+        ],
+      },
       infrastructure: {
         solanaName: "Solana",
         koraName: "Kora",
@@ -84,8 +96,8 @@ export const messages = {
           desc: "Sem cartão internacional. Sem crypto. Deposita em reais e sua campanha está no ar em minutos.",
         },
         {
-          title: "Bid Optimizer",
-          desc: "O Bido ajusta seus lances automaticamente para maximizar aparições dentro do seu orçamento diário.",
+          title: "Privacidade para Sponsors",
+          desc: "Budgets e bids não ficam expostos publicamente. Seus dados comerciais permanecem protegidos.",
         },
         {
           title: "Targeting por intenção",
@@ -204,7 +216,7 @@ export const messages = {
         steps: [
           {
             number: "01",
-            title: "Usuário envia uma query com intenção comercial",
+            title: "Usuário envia uma query com intenção",
             description: "Seu agente recebe normalmente. Uma mensagem como qualquer outra.",
             code: '"Quero voos de São Paulo para Nova York por até R$2.500"',
             codeType: "query"
@@ -212,32 +224,38 @@ export const messages = {
           {
             number: "02",
             title: "A Skill detecta a intenção",
-            description: "Nem toda query vira receita — só as com intenção de compra real. A Skill classifica automaticamente e decide se aciona o match.",
+            description:
+              "A Bido analisa a query em tempo real e identifica intenções acionáveis — compra, signup, aprendizado, adoção, desenvolvimento ou qualquer ação valiosa para sponsors.",
             codeType: "none"
           },
           {
             number: "03",
-            title: "402 Payment Required — match instantâneo",
-            description: "Marcas cadastram campanhas com budget, intenções-alvo e lance máximo. Quando a query bate com uma campanha ativa, o maior lance vence na hora — sem latência de leilão.",
+            title: "Campanhas elegíveis entram no leilão",
+            description:
+              "Sponsors já configuraram campanhas com: intenção-alvo, budget, bid cap e regras de contexto. Quando a intenção aparece, apenas campanhas compatíveis participam do auction.",
             codeType: "none"
           },
           {
             number: "04",
-            title: "O vencedor paga antes da resposta ser entregue",
-            description: "Sem risco pro seu agente. A transação acontece antes de qualquer resposta voltar.",
+            title: "O vencedor é definido e o budget reservado",
+            description:
+              "A campanha com maior bid válido vence aquele momento de intenção. O valor é reservado automaticamente antes da resposta final.",
             codeType: "none"
           },
           {
             number: "05",
-            title: "Seu agente entrega a resposta patrocinada",
-            description: "O usuário recebe uma recomendação útil com oferta relevante — não um banner, uma resposta.",
-            code: '"Encontrei voos para Nova York. A LATAM está com 10% de desconto em voos diretos esta semana → latam.com/oferta"',
+            title: "Seu agente entrega a recomendação patrocinada",
+            description:
+              "O agente mantém controle total da experiência e responde com uma sugestão relevante e contextual.",
+            codeLabel: "recomendação patrocinada",
+            code: '"Encontrei voos para Nova York. A LATAM está com desconto em voos diretos esta semana."',
             codeType: "response"
           },
           {
             number: "06",
-            title: "Você recebe em USDC, automaticamente",
-            description: "Revenue share direto na sua carteira Solana. Sem invoice, sem esperar 30 dias, sem intermediário.",
+            title: "Settlement e revenue share em USDC",
+            description:
+              "Após entrega válida, o valor é liquidado automaticamente e distribuído entre o produto de IA e a Bido.",
             codeType: "none"
           }
         ]
@@ -495,10 +513,10 @@ export const messages = {
       socialGitHub: "GitHub",
     },
     navbar: {
-      adsForAgents: "For Sponsors",
-      forDevs: "For Devs",
+      adsForAgents: "Advertise",
+      forDevs: "Monetize",
       useCases: "Use Cases",
-      docs: "Docs",
+      docs: "Documentation",
       about: "About us",
       openMenu: "Open menu",
       closeMenu: "Close menu",
@@ -515,9 +533,21 @@ export const messages = {
       requestPresentation: "Request a presentation",
     },
     home: {
-      badge: "Devnet on Solana",
-      headline: "The Monetization Layer for the Agent Economy",
-      subheadline: "Bido connects sponsors who want to reach users at the moment of decision — and developers who want to monetize AI agents, copilots, and LLM products.",
+      headline: "The ad platform for the agent economy.",
+      subheadline:
+        "Bido helps AI products monetize agent traffic and helps sponsors win customers at the moment of decision.",
+      useCases: {
+        eyebrow: "Use cases created by the Bido team.",
+        items: [
+          {
+            name: "Solana",
+            tag: "Case Study",
+            logo: "solana",
+            quote:
+              "How Solana can turn builder intent inside AI coding tools into ecosystem growth through instant incentives.",
+          },
+        ],
+      },
       infrastructure: {
         solanaName: "Solana",
         koraName: "Kora",
@@ -544,8 +574,8 @@ export const messages = {
           desc: "No international card. No crypto. Fund in BRL and get your campaign live in minutes.",
         },
         {
-          title: "Bid Optimizer",
-          desc: "Bido automatically adjusts bids to maximize appearances within your daily budget.",
+          title: "Privacy for Sponsors",
+          desc: "Budgets and bids are not exposed publicly. Your commercial data stays protected.",
         },
         {
           title: "Intent targeting",
@@ -664,7 +694,7 @@ export const messages = {
         steps: [
           {
             number: "01",
-            title: "User sends a query with commercial intent",
+            title: "User sends a query with intent",
             description: "Your agent receives it normally. A message like any other.",
             code: '"I want flights from São Paulo to New York for up to R$2,500"',
             codeType: "query"
@@ -672,32 +702,38 @@ export const messages = {
           {
             number: "02",
             title: "The Skill detects the intent",
-            description: "Not every query becomes revenue — only those with real purchase intent. The Skill classifies automatically and decides whether to trigger a match.",
+            description:
+              "Bido analyzes the query in real time and identifies actionable intent — purchase, signup, learning, adoption, development, or any action that is valuable to sponsors.",
             codeType: "none"
           },
           {
             number: "03",
-            title: "402 Payment Required — instant match",
-            description: "Brands register campaigns with a budget, target intents, and a max bid. When the query matches an active campaign, the highest bid wins instantly — no auction latency.",
+            title: "Eligible campaigns enter the auction",
+            description:
+              "Sponsors have already configured campaigns with target intent, budget, bid cap, and context rules. When the intent appears, only compatible campaigns enter the auction.",
             codeType: "none"
           },
           {
             number: "04",
-            title: "The winner pays before the response is delivered",
-            description: "No risk to your agent. The transaction happens before any response comes back.",
+            title: "The winner is defined and budget is reserved",
+            description:
+              "The campaign with the highest valid bid wins that moment of intent. The amount is automatically reserved before the final response.",
             codeType: "none"
           },
           {
             number: "05",
-            title: "Your agent delivers the sponsored response",
-            description: "The user receives a helpful recommendation with a relevant offer — not a banner, an answer.",
-            code: '"I found flights to New York. LATAM has a 10% discount on direct flights this week → latam.com/offer"',
+            title: "Your agent delivers the sponsored recommendation",
+            description:
+              "The agent keeps full control of the experience and responds with a relevant, contextual suggestion.",
+            codeLabel: "sponsored recommendation",
+            code: '"I found flights to New York. LATAM has a discount on direct flights this week."',
             codeType: "response"
           },
           {
             number: "06",
-            title: "You get paid in USDC, automatically",
-            description: "Revenue share directly to your Solana wallet. No invoice, no waiting 30 days, no middleman.",
+            title: "Settlement and revenue share in USDC",
+            description:
+              "After valid delivery, the amount is automatically settled and distributed between the AI product and Bido.",
             codeType: "none"
           }
         ]

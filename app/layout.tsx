@@ -3,6 +3,7 @@ import { JetBrains_Mono, Nunito } from "next/font/google";
 import "./globals.css";
 import { I18nProvider } from "@/components/providers/i18n-provider";
 import PrivyAppProvider from "@/components/providers/privy-provider";
+import { ThemeProvider } from "@/components/providers/theme-provider";
 
 const nunito = Nunito({
   subsets: ["latin"],
@@ -30,11 +31,14 @@ export default function RootLayout({
     <html
       lang="pt-BR"
       className={`${nunito.variable} ${jetbrainsMono.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
       <body className="min-h-full">
-        <I18nProvider>
-          <PrivyAppProvider>{children}</PrivyAppProvider>
-        </I18nProvider>
+        <ThemeProvider>
+          <I18nProvider>
+            <PrivyAppProvider>{children}</PrivyAppProvider>
+          </I18nProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

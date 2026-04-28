@@ -1,11 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import { ArrowRight } from "lucide-react";
 import { useI18n } from "@/components/providers/i18n-provider";
 import { ChatMockup } from "@/components/site/chat-mockup";
-import { CalRequestButton } from "@/components/site/cal-request-button";
 import { WaitlistModal } from "@/components/site/waitlist-modal";
 
 export function Hero({
@@ -14,11 +12,16 @@ export function Hero({
   onLogin: () => void;
 }) {
   const [waitlistOpen, setWaitlistOpen] = useState(false);
+  const [heroEmail, setHeroEmail] = useState("");
   const { messages } = useI18n();
 
   return (
     <section className="relative overflow-hidden">
-      <WaitlistModal open={waitlistOpen} onClose={() => setWaitlistOpen(false)} />
+      <WaitlistModal
+        open={waitlistOpen}
+        onClose={() => setWaitlistOpen(false)}
+        initialEmail={heroEmail}
+      />
       <div
         aria-hidden
         className="pointer-events-none absolute left-1/2 top-0 -z-10 h-[600px] w-[1100px] -translate-x-1/2 rounded-full opacity-40 blur-3xl"
@@ -45,11 +48,23 @@ export function Hero({
           {messages.hero.description}
         </p>
 
-        <div className="mt-10 flex flex-col items-start gap-3 sm:flex-row sm:items-center">
+        <form
+          className="mt-10 flex h-14 w-full max-w-xl items-center gap-1 overflow-hidden rounded-xl border border-border bg-surface-2/60 p-1 backdrop-blur focus-within:border-violet/50"
+          onSubmit={(e) => {
+            e.preventDefault();
+            setWaitlistOpen(true);
+          }}
+        >
+          <input
+            type="email"
+            placeholder={messages.waitlist.form.emailPlaceholder}
+            value={heroEmail}
+            onChange={(e) => setHeroEmail(e.target.value)}
+            className="h-full w-full min-w-0 bg-transparent px-4 text-base text-foreground placeholder:text-muted-foreground focus:outline-none"
+          />
           <button
-            type="button"
-            onClick={() => setWaitlistOpen(true)}
-            className="group relative inline-flex h-12 items-center gap-2 overflow-hidden rounded-md bg-violet px-6 text-sm font-semibold text-violet-foreground shadow-lg shadow-violet/20 transition-colors duration-300 hover:text-black"
+            type="submit"
+            className="group relative inline-flex h-full shrink-0 items-center justify-center gap-2 overflow-hidden rounded-lg bg-violet px-6 text-base font-semibold text-violet-foreground shadow-lg shadow-violet/20 transition-colors duration-300 hover:text-black"
           >
             <span
               aria-hidden
@@ -60,12 +75,7 @@ export function Hero({
               <ArrowRight className="h-4 w-4" />
             </span>
           </button>
-          <CalRequestButton
-            className="inline-flex h-12 items-center gap-2 rounded-md border border-border bg-transparent px-6 text-sm font-semibold text-foreground transition-colors hover:bg-surface-2"
-          >
-            {messages.hero.requestPresentation}
-          </CalRequestButton>
-        </div>
+        </form>
 
         <div className="relative mt-20">
           <div
