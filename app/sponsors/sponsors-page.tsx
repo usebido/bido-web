@@ -4,7 +4,6 @@ import { usePrivy } from "@privy-io/react-auth";
 import { Hero } from "@/components/site/hero";
 import { Navbar } from "@/components/site/navbar";
 import { PricingCalculator } from "@/components/site/pricing-calculator";
-import { TerminalDemo } from "@/components/site/terminal-demo";
 import { ThemeToggle } from "@/components/site/theme-toggle";
 import { FaqsSection } from "@/components/ui/faqs-1";
 import { useI18n } from "@/components/providers/i18n-provider";
@@ -52,7 +51,13 @@ export default function SponsorsPage() {
     <div id="top" className="min-h-screen bg-background text-foreground">
       <Navbar authenticated={authenticated} onLogin={login} />
       <main>
-        <Hero authenticated={authenticated} onLogin={login} />
+        <Hero
+          authenticated={authenticated}
+          onLogin={login}
+          title={sponsors.heroTitle}
+          description={sponsors.heroDescription}
+          descriptionClassName="max-w-4xl text-pretty lg:max-w-none lg:whitespace-nowrap"
+        />
 
         <section className="border-t border-border/60 py-32">
           <div className="mx-auto max-w-6xl px-6">

@@ -48,16 +48,17 @@ export const messages = {
     hero: {
       badgePrefix: "Novidade:",
       badgeText: "Bido entrou em fase de testes fechados",
-      title: "Enquanto você anuncia no Google, seus clientes estão perguntando pra IA",
-      description: "O Bido coloca sua marca na resposta — não no banner que ninguém vê.",
+      title: "Enquanto você espera o cliente decidir, o agente já decidiu por ele.",
+      description:
+        "A Bido coloca sua empresa na decisão — não no banner que o agente nunca vai ver.",
       infrastructureBy: "Infraestrutura por:",
       waitlist: "Entrar na lista de espera",
       requestPresentation: "Solicitar apresentação",
     },
     home: {
-      headline: "A plataforma de anúncios para a economia dos agentes.",
+      headline: "Os agentes já estão decidindo. Sua marca não está na sala.",
       subheadline:
-        "A Bido ajuda produtos de IA a monetizar tráfego de agentes e ajuda patrocinadores a conquistar clientes no momento da decisão.",
+        "A Bido ajuda produtos de IA a monetizar seu tráfego e marcas a serem escolhidas no momento da decisão.",
       useCases: {
         eyebrow: "Use cases criados pelo time da Bido.",
         items: [
@@ -88,6 +89,9 @@ export const messages = {
       },
     },
     sponsors: {
+      heroTitle: "Enquanto você espera o cliente decidir, o agente já decidiu por ele.",
+      heroDescription:
+        "A Bido coloca sua empresa na decisão — não no banner que o agente nunca vai ver.",
       featuresTitle: "Feito para marcas que querem estar onde a decisão acontece.",
       featuresDescription: "O Bido traz estrutura para anunciar na era dos agentes de IA.",
       features: [
@@ -314,11 +318,14 @@ export const messages = {
       name: "Nome",
       email: "E-mail",
       company: "Empresa",
+      objective: "O que voce quer fazer?",
+      objectivePlaceholder: "Selecione uma opcao…",
       segment: "Segmento",
       segmentPlaceholder: "Selecione o segmento…",
       segmentOtherPlaceholder: "Qual segmento?",
       budget: "Orçamento mensal em ads",
       budgetPlaceholder: "Selecione a faixa…",
+      aiUsers: "Quantos usuarios tem na sua plataforma de IA?",
       submit: "Garantir minha vaga",
       sending: "Enviando…",
       error: "Nao foi possivel enviar agora. Tente novamente em instantes.",
@@ -326,6 +333,11 @@ export const messages = {
         namePlaceholder: "Seu nome completo",
         emailPlaceholder: "voce@empresa.com",
         companyPlaceholder: "Nome da empresa",
+        aiUsersPlaceholder: "Ex.: 25000",
+      },
+      objectives: {
+        advertise: "Anunciar",
+        monetize: "Monetizar",
       },
       segments: {
         ecommerce: "E-commerce",
@@ -526,16 +538,17 @@ export const messages = {
     hero: {
       badgePrefix: "New:",
       badgeText: "Bido has entered closed beta",
-      title: "While you advertise on Google, your customers are asking AI",
-      description: "Bido puts your brand inside the answer — not in the banner nobody sees.",
+      title: "While you wait for the customer to decide, the agent has already decided for them.",
+      description:
+        "Bido puts your company inside the decision — not in the banner the agent will never see.",
       infrastructureBy: "Infrastructure by:",
       waitlist: "Join the waitlist",
       requestPresentation: "Request a presentation",
     },
     home: {
-      headline: "The ad platform for the agent economy.",
+      headline: "Agents are already deciding. Your brand is not in the room.",
       subheadline:
-        "Bido helps AI products monetize agent traffic and helps sponsors win customers at the moment of decision.",
+        "Bido helps AI products monetize their traffic and helps brands be chosen at the moment of decision.",
       useCases: {
         eyebrow: "Use cases created by the Bido team.",
         items: [
@@ -566,6 +579,9 @@ export const messages = {
       },
     },
     sponsors: {
+      heroTitle: "While you wait for the customer to decide, the agent has already decided for them.",
+      heroDescription:
+        "Bido puts your company inside the decision — not in the banner the agent will never see.",
       featuresTitle: "Built for brands that want to be where decisions happen.",
       featuresDescription: "Bido brings structure to advertising in the age of AI agents.",
       features: [
@@ -792,11 +808,14 @@ export const messages = {
       name: "Name",
       email: "Email",
       company: "Company",
+      objective: "What do you want to do?",
+      objectivePlaceholder: "Select an option…",
       segment: "Segment",
       segmentPlaceholder: "Select a segment…",
       segmentOtherPlaceholder: "Which segment?",
       budget: "Monthly ad budget",
       budgetPlaceholder: "Select a range…",
+      aiUsers: "How many users does your AI platform have?",
       submit: "Reserve my spot",
       sending: "Sending…",
       error: "We couldn't submit this right now. Please try again shortly.",
@@ -804,6 +823,11 @@ export const messages = {
         namePlaceholder: "Your full name",
         emailPlaceholder: "you@company.com",
         companyPlaceholder: "Company name",
+        aiUsersPlaceholder: "E.g. 25,000",
+      },
+      objectives: {
+        advertise: "Advertise",
+        monetize: "Monetize",
       },
       segments: {
         ecommerce: "E-commerce",

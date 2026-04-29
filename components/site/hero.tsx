@@ -7,9 +7,15 @@ import { ChatMockup } from "@/components/site/chat-mockup";
 import { WaitlistModal } from "@/components/site/waitlist-modal";
 
 export function Hero({
+  title,
+  description,
+  descriptionClassName,
 }: {
   authenticated: boolean;
   onLogin: () => void;
+  title?: string;
+  description?: string;
+  descriptionClassName?: string;
 }) {
   const [waitlistOpen, setWaitlistOpen] = useState(false);
   const [heroEmail, setHeroEmail] = useState("");
@@ -41,11 +47,11 @@ export function Hero({
         </a>
 
         <h1 className="mt-8 max-w-5xl text-balance text-5xl font-bold leading-[1.05] tracking-tight text-foreground sm:text-6xl md:text-7xl lg:text-[88px]">
-          {messages.hero.title}
+          {title ?? messages.hero.title}
         </h1>
 
-        <p className="mt-8 max-w-2xl text-balance text-lg text-muted-foreground sm:text-xl">
-          {messages.hero.description}
+        <p className={`mt-8 max-w-2xl text-balance text-lg text-muted-foreground sm:text-xl ${descriptionClassName ?? ""}`}>
+          {description ?? messages.hero.description}
         </p>
 
         <form

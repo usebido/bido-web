@@ -8,18 +8,22 @@ type FormState = {
   nome: string;
   email: string;
   empresa: string;
+  objetivo: string;
   segmento: string;
   segmentoOutro: string;
   orcamento: string;
+  usuariosIA: string;
 };
 
 const EMPTY: FormState = {
   nome: "",
   email: "",
   empresa: "",
+  objetivo: "",
   segmento: "",
   segmentoOutro: "",
   orcamento: "",
+  usuariosIA: "",
 };
 
 export function WaitlistModal({
@@ -41,6 +45,10 @@ export function WaitlistModal({
     { value: "servicos", label: messages.waitlist.segments.services },
     { value: "outro", label: messages.waitlist.segments.other },
   ];
+  const OBJETIVOS = [
+    { value: "anunciar", label: messages.waitlist.objectives.advertise },
+    { value: "monetizar", label: messages.waitlist.objectives.monetize },
+  ];
   const ORCAMENTOS = [
     { value: "500-2k", label: messages.waitlist.budgetRanges.range1 },
     { value: "2k-10k", label: messages.waitlist.budgetRanges.range2 },
@@ -54,14 +62,26 @@ export function WaitlistModal({
   }, [onClose]);
 
   useEffect(() => {
+    let frame = 0;
+    let focusTimer = 0;
+
     if (open) {
       document.body.style.overflow = "hidden";
-      setForm((current) => ({ ...current, email: initialEmail }));
-      setTimeout(() => firstRef.current?.focus(), 80);
+      frame = window.requestAnimationFrame(() => {
+        setForm((current) => ({ ...current, email: initialEmail }));
+      });
+      focusTimer = window.setTimeout(() => firstRef.current?.focus(), 80);
     } else {
       document.body.style.overflow = "";
     }
+
     return () => {
+      if (frame) {
+        window.cancelAnimationFrame(frame);
+      }
+      if (focusTimer) {
+        window.clearTimeout(focusTimer);
+      }
       document.body.style.overflow = "";
     };
   }, [initialEmail, open]);
@@ -81,6 +101,18 @@ export function WaitlistModal({
     (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
       setForm((f) => ({ ...f, [k]: e.target.value }));
 
+  const setObjetivo = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const objetivo = e.target.value;
+    setForm((f) => ({
+      ...f,
+      objetivo,
+      segmento: objetivo === "anunciar" ? f.segmento : "",
+      segmentoOutro: objetivo === "anunciar" ? f.segmentoOutro : "",
+      orcamento: objetivo === "anunciar" ? f.orcamento : "",
+      usuariosIA: objetivo === "monetizar" ? f.usuariosIA : "",
+    }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setStatus("loading");
@@ -90,11 +122,17 @@ export function WaitlistModal({
       formData.append("nome", form.nome);
       formData.append("email", form.email);
       formData.append("empresa", form.empresa);
+      formData.append("objetivo", form.objetivo);
       formData.append(
         "segmento",
-        form.segmento === "outro" ? form.segmentoOutro : form.segmento,
+        form.objetivo === "anunciar"
+          ? form.segmento === "outro"
+            ? form.segmentoOutro
+            : form.segmento
+          : "-",
       );
-      formData.append("orcamento", form.orcamento);
+      formData.append("orcamento", form.objetivo === "anunciar" ? form.orcamento : "-");
+      formData.append("usuarios_ia", form.objetivo === "monetizar" ? form.usuariosIA : "-");
       formData.append("_subject", "Nova entrada na lista de espera - Bido");
       formData.append("_captcha", "false");
       formData.append("_template", "table");
@@ -201,53 +239,91 @@ export function WaitlistModal({
                 />
               </Field>
 
-              <Field label={messages.waitlist.segment}>
+              <Field label={messages.waitlist.objective}>
                 <SelectField
-                  id="wl-segmento"
-                  value={form.segmento}
-                  onChange={set("segmento")}
+                  id="wl-objetivo"
+                  value={form.objetivo}
+                  onChange={setObjetivo}
                   required
                 >
                   <option value="" disabled>
-                    {messages.waitlist.segmentPlaceholder}
+                    {messages.waitlist.objectivePlaceholder}
                   </option>
-                  {SEGMENTOS.map((s) => (
-                    <option key={s.value} value={s.value}>
-                      {s.label}
+                  {OBJETIVOS.map((objective) => (
+                    <option key={objective.value} value={objective.value}>
+                      {objective.label}
                     </option>
                   ))}
                 </SelectField>
+              </Field>
 
-                {form.segmento === "outro" ? (
-                  <div className="mt-2 animate-in fade-in slide-in-from-top-1 duration-200">
-                    <Input
-                      id="wl-segmento-outro"
-                      placeholder={messages.waitlist.segmentOtherPlaceholder}
-                      value={form.segmentoOutro}
-                      onChange={set("segmentoOutro")}
+              {form.objetivo === "anunciar" ? (
+                <>
+                  <Field label={messages.waitlist.segment}>
+                    <SelectField
+                      id="wl-segmento"
+                      value={form.segmento}
+                      onChange={set("segmento")}
                       required
-                    />
-                  </div>
-                ) : null}
-              </Field>
+                    >
+                      <option value="" disabled>
+                        {messages.waitlist.segmentPlaceholder}
+                      </option>
+                      {SEGMENTOS.map((s) => (
+                        <option key={s.value} value={s.value}>
+                          {s.label}
+                        </option>
+                      ))}
+                    </SelectField>
 
-              <Field label={messages.waitlist.budget}>
-                <SelectField
-                  id="wl-orcamento"
-                  value={form.orcamento}
-                  onChange={set("orcamento")}
-                  required
-                >
-                  <option value="" disabled>
-                    {messages.waitlist.budgetPlaceholder}
-                  </option>
-                  {ORCAMENTOS.map((o) => (
-                    <option key={o.value} value={o.value}>
-                      {o.label}
-                    </option>
-                  ))}
-                </SelectField>
-              </Field>
+                    {form.segmento === "outro" ? (
+                      <div className="mt-2 animate-in fade-in slide-in-from-top-1 duration-200">
+                        <Input
+                          id="wl-segmento-outro"
+                          placeholder={messages.waitlist.segmentOtherPlaceholder}
+                          value={form.segmentoOutro}
+                          onChange={set("segmentoOutro")}
+                          required
+                        />
+                      </div>
+                    ) : null}
+                  </Field>
+
+                  <Field label={messages.waitlist.budget}>
+                    <SelectField
+                      id="wl-orcamento"
+                      value={form.orcamento}
+                      onChange={set("orcamento")}
+                      required
+                    >
+                      <option value="" disabled>
+                        {messages.waitlist.budgetPlaceholder}
+                      </option>
+                      {ORCAMENTOS.map((o) => (
+                        <option key={o.value} value={o.value}>
+                          {o.label}
+                        </option>
+                      ))}
+                    </SelectField>
+                  </Field>
+                </>
+              ) : null}
+
+              {form.objetivo === "monetizar" ? (
+                <Field label={messages.waitlist.aiUsers}>
+                  <Input
+                    id="wl-usuarios-ia"
+                    type="number"
+                    inputMode="numeric"
+                    min="0"
+                    step="1"
+                    placeholder={messages.waitlist.form.aiUsersPlaceholder}
+                    value={form.usuariosIA}
+                    onChange={set("usuariosIA")}
+                    required
+                  />
+                </Field>
+              ) : null}
 
               <div className="pt-2">
                 <button
