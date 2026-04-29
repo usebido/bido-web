@@ -48,17 +48,17 @@ export const messages = {
     hero: {
       badgePrefix: "Novidade:",
       badgeText: "Bido entrou em fase de testes fechados",
-      title: "Enquanto você espera o cliente decidir, o agente já decidiu por ele.",
+      title: "O agente já decidiu. Você estava lá?",
       description:
-        "A Bido coloca sua empresa na decisão — não no banner que o agente nunca vai ver.",
+        "A Bido coloca sua empresa no reasoning do agente — no momento em que a decisão acontece, não depois.",
       infrastructureBy: "Infraestrutura por:",
       waitlist: "Entrar na lista de espera",
       requestPresentation: "Solicitar apresentação",
     },
     home: {
-      headline: "Os agentes já estão decidindo. Sua marca não está na sala.",
+      headline: "O próximo trilhão de usuários da internet não vai clicar em nada.",
       subheadline:
-        "A Bido ajuda produtos de IA a monetizar seu tráfego e marcas a serem escolhidas no momento da decisão.",
+        "São agentes de IA — e eles já estão decidindo. A Bido ajuda produtos de IA a monetizar esse tráfego e empresas a estarem dentro da decisão.",
       useCases: {
         eyebrow: "Use cases criados pelo time da Bido.",
         items: [
@@ -77,55 +77,55 @@ export const messages = {
       },
       audienceCards: {
         sponsors: {
-          label: "Para Patrocinadores",
-          title: "Alcance usuários no momento da decisão",
-          description: "Alcance usuários no momento exato da decisão. Sem banner. Sem clique ignorado.",
+          label: "Para Empresas",
+          title: "Esteja no reasoning do agente antes da decisão",
+          description: "Contexto qualificado no momento certo. Sem banner. Sem clique ignorado.",
         },
         devs: {
-          label: "Para Devs",
-          title: "Monetize seu agente com uma skill",
-          description: "Monetize seu agente com uma skill. Um comando, revenue share automático em USDC.",
+          label: "Para Produtos de IA",
+          title: "Monetize cada decisão do seu agente",
+          description: "Uma skill, e cada query com intenção vira receita. Revenue share automático em USDC.",
         },
       },
     },
     sponsors: {
-      heroTitle: "Enquanto você espera o cliente decidir, o agente já decidiu por ele.",
+      heroTitle: "O agente já decidiu. Você estava lá?",
       heroDescription:
-        "A Bido coloca sua empresa na decisão — não no banner que o agente nunca vai ver.",
-      featuresTitle: "Feito para marcas que querem estar onde a decisão acontece.",
-      featuresDescription: "O Bido traz estrutura para anunciar na era dos agentes de IA.",
+        "A Bido coloca sua empresa no reasoning do agente — no momento em que a decisão acontece, não depois.",
+      featuresTitle: "Feito para empresas que querem estar onde a decisão acontece.",
+      featuresDescription: "A Bido traz estrutura para distribuição na era dos agentes de IA.",
       features: [
         {
           title: "Depósito via PIX",
           desc: "Sem cartão internacional. Sem crypto. Deposita em reais e sua campanha está no ar em minutos.",
         },
         {
-          title: "Privacidade para Sponsors",
+          title: "Privacidade para Empresas",
           desc: "Budgets e bids não ficam expostos publicamente. Seus dados comerciais permanecem protegidos.",
         },
         {
           title: "Targeting por intenção",
-          desc: "Escolha as queries exatas onde quer aparecer. Seu anúncio só roda quando a busca é relevante pro seu negócio.",
+          desc: "Escolha as queries exatas onde quer aparecer. Seu contexto só entra no reasoning quando a busca é relevante pro seu negócio.",
         },
         {
           title: "Relatório em tempo real",
-          desc: "Veja queries, impressões e decisões geradas — tudo num dashboard simples, sem precisar de analista.",
+          desc: "Veja queries, intenções e decisões geradas — tudo num dashboard simples, sem precisar de analista.",
         },
       ],
     },
     build: {
-      title: "Uma skill. Seus agentes ja sabem onde recomendar.",
-      description: "Plugue inteligencia de ads direto no seu agente. Uma linha, zero friccao.",
+      title: "Uma skill. Contexto qualificado no reasoning do seu agente.",
+      description: "Sem banner. Sem fricção. Cada decisão vira receita.",
     },
     devs: {
-      badge: "Para devs",
+      badge: "Para produtos de IA",
       title: "Skills feitas pra agentes.",
       titleMuted: "Não pra você.",
       description:
-        "Um comando, suas envs e o seu agente já ativa Ads por intenção",
+        "Um comando, suas envs e o seu agente já raciocina com contexto de patrocinadores.",
       docsCta: "Ler a documentação",
       compatibility:
-        "Funciona com qualquer agente compativel com a Skill Spec: Claude Agents, OpenAI Assistants, LangChain, Mastra e frameworks proprios.",
+        "Funciona com qualquer agente compatível com a Skill Spec: Claude Agents, OpenAI Assistants, LangChain, Mastra e frameworks próprios.",
       revenueCalculator: {
         badge: "Estimativa de receita",
         title: "Quanto seu agente pode gerar?",
@@ -194,13 +194,13 @@ export const messages = {
           { kind: "blank" },
           {
             kind: "output",
-            text: "● Ads habilitado — seu agente ja esta monetizando.",
+            text: "● Skill ativa — seu agente já raciocina com contexto de patrocinadores.",
             className: "text-violet font-semibold",
             delay: 500,
           },
           {
             kind: "output",
-            text: "↳ Payouts em USDC direto na sua wallet a cada recomendaçao.",
+            text: "↳ Payouts em USDC direto na sua wallet a cada decisão.",
             className: "text-muted-foreground",
             delay: 300,
           },
@@ -229,14 +229,14 @@ export const messages = {
             number: "02",
             title: "A Skill detecta a intenção",
             description:
-              "A Bido analisa a query em tempo real e identifica intenções acionáveis — compra, signup, aprendizado, adoção, desenvolvimento ou qualquer ação valiosa para sponsors.",
+              "A Bido analisa a query em tempo real e identifica intenções acionáveis — compra, signup, aprendizado, adoção, desenvolvimento ou qualquer ação valiosa para patrocinadores.",
             codeType: "none"
           },
           {
             number: "03",
             title: "Campanhas elegíveis entram no leilão",
             description:
-              "Sponsors já configuraram campanhas com: intenção-alvo, budget, bid cap e regras de contexto. Quando a intenção aparece, apenas campanhas compatíveis participam do auction.",
+              "Patrocinadores já configuraram campanhas com: intenção-alvo, budget, bid cap e regras de contexto. Quando a intenção aparece, apenas campanhas compatíveis participam do auction.",
             codeType: "none"
           },
           {
@@ -248,10 +248,10 @@ export const messages = {
           },
           {
             number: "05",
-            title: "Seu agente entrega a recomendação patrocinada",
+            title: "O contexto do patrocinador entra no reasoning do agente",
             description:
-              "O agente mantém controle total da experiência e responde com uma sugestão relevante e contextual.",
-            codeLabel: "recomendação patrocinada",
+              "Antes de responder, o agente recebe contexto qualificado do vencedor do leilão. A recomendação sai naturalmente dele — não da Bido.",
+            codeLabel: "recomendação contextual",
             code: '"Encontrei voos para Nova York. A LATAM está com desconto em voos diretos esta semana."',
             codeType: "response"
           },
@@ -287,13 +287,13 @@ export const messages = {
             id: "dev-item-3",
             title: "Eu perco controle sobre a resposta do meu agente?",
             content:
-              "Não. A Skill adiciona a camada de monetização e recomendação patrocinada, mas o agente continua controlando a experiência e o contexto da resposta.",
+              "Não. A Skill injeta contexto qualificado no reasoning do agente antes da resposta. O agente continua controlando a experiência — a recomendação sai naturalmente dele.",
           },
           {
             id: "dev-item-4",
             title: "Como os pagamentos funcionam?",
             content:
-              "Quando uma recomendação patrocinada válida acontece, o revenue share é enviado em USDC para a wallet Solana configurada por você. Sem invoice e sem ciclo de repasse manual.",
+              "Quando uma decisão patrocinada válida acontece, o revenue share é enviado em USDC para a wallet Solana configurada por você. Sem invoice e sem ciclo de repasse manual.",
           },
           {
             id: "dev-item-5",
@@ -323,7 +323,7 @@ export const messages = {
       segment: "Segmento",
       segmentPlaceholder: "Selecione o segmento…",
       segmentOtherPlaceholder: "Qual segmento?",
-      budget: "Orçamento mensal em ads",
+      budget: "Orçamento mensal",
       budgetPlaceholder: "Selecione a faixa…",
       aiUsers: "Quantos usuarios tem na sua plataforma de IA?",
       submit: "Garantir minha vaga",
@@ -336,8 +336,8 @@ export const messages = {
         aiUsersPlaceholder: "Ex.: 25000",
       },
       objectives: {
-        advertise: "Anunciar",
-        monetize: "Monetizar",
+        advertise: "Quero estar na decisão",
+        monetize: "Quero monetizar meu agente",
       },
       segments: {
         ecommerce: "E-commerce",
@@ -354,16 +354,16 @@ export const messages = {
       closeModal: "Fechar modal",
     },
     terminal: {
-      title: "Veja como o usuário te encontra",
-      description: "Em vez de um banner ignorado, sua marca aparece como resposta no momento exato da decisão.",
-      windowTitle: "bido - resposta ao vivo",
+      title: "Veja como você entra na decisão",
+      description: "Em vez de um banner ignorado, seu contexto entra no reasoning do agente no momento exato da decisão.",
+      windowTitle: "bido - reasoning ao vivo",
       promptLabel: "usuário",
       thinkingLabel: "ia",
       promptText: "Qual a melhor opção de voo GRU para JFK na próxima semana?",
       steps: [
         "analisando intenção de busca…",
         "buscando contexto de voos GRU → JFK…",
-        "verificando sponsors ativos via Bido…",
+        "verificando patrocinadores ativos via Bido…",
         "rodando leilão (CPD US$ 0.50)…",
       ],
       systemLine: "✓ Aerolux Fly venceu o BID  ·  CPD US$ 0.47",
@@ -388,7 +388,7 @@ export const messages = {
       moment: "Momento",
       audience: "Público",
       afterSearch: "após a busca",
-      atPurchaseDecision: "na decisão de compra",
+      atPurchaseDecision: "no reasoning do agente",
       human: "humano",
       aiAgent: "agente de IA",
       clicks: "cliques",
@@ -398,40 +398,40 @@ export const messages = {
     },
     faq: {
       badge: "FAQ",
-      title: "Perguntas frequentes sobre ads para agentes",
+      title: "Perguntas frequentes",
       description:
-        "O essencial para entender como a Bido encaixa sua marca no fluxo de decisão de produtos guiados por IA.",
+        "O essencial para entender como a Bido coloca sua empresa no fluxo de decisão de agentes de IA.",
       contactLead: "Não encontrou o que precisava? Fale com o nosso time em ",
       questions: [
         {
           id: "item-1",
           title: "O que é a Bido?",
           content:
-            "A Bido é uma camada de leilões por intenção para agentes de IA. Em vez de disputar banner, as marcas disputam recomendação no momento em que a pergunta acontece.",
+            "A Bido é uma camada de distribuição por intenção para agentes de IA. Em vez de disputar banner, empresas disputam estar no reasoning do agente no momento em que a pergunta acontece.",
         },
         {
           id: "item-2",
-          title: "Como a marca aparece na resposta da IA?",
+          title: "Como a empresa entra na resposta da IA?",
           content:
-            "Quando a consulta indica intenção comercial, a Bido roda um leilão em tempo real entre patrocinadores elegíveis e ajuda o agente a selecionar a melhor recomendação patrocinada dentro do contexto da pergunta.",
+            "Quando a query indica intenção comercial, a Bido roda um leilão em tempo real entre patrocinadores elegíveis e injeta o contexto do vencedor no reasoning do agente — a recomendação sai naturalmente dele.",
         },
         {
           id: "item-3",
           title: "A Bido substitui Google Ads?",
           content:
-            "Não. A proposta é abrir um novo canal de distribuição para a era dos agentes. O Google continua relevante para a busca tradicional, enquanto a Bido organiza ads para respostas geradas por IA.",
+            "Não. A proposta é abrir um novo canal de distribuição para a era dos agentes. O Google continua relevante para a busca tradicional, enquanto a Bido organiza distribuição para decisões geradas por IA.",
         },
         {
           id: "item-4",
           title: "Como funciona o pagamento?",
           content:
-            "O modelo principal é por decisão. Em vez de pagar por impressão vazia, a marca define quanto aceita pagar quando a recomendação efetivamente entra no fluxo de decisão do usuário.",
+            "O modelo é por decisão. Em vez de pagar por impressão vazia, a empresa define quanto aceita pagar quando o contexto efetivamente entra no reasoning do agente.",
         },
         {
           id: "item-5",
-          title: "Preciso integrar cripto ou carteira para usar?",
+          title: "Preciso integrar crypto ou carteira para usar?",
           content:
-            "Não necessariamente. A experiência foi pensada para ser simples para as marcas, inclusive com depósito em reais via PIX. A infraestrutura em Solana fica por baixo.",
+            "Não necessariamente. A experiência foi pensada para ser simples para as empresas, inclusive com depósito em reais via PIX. A infraestrutura em Solana fica por baixo.",
         },
         {
           id: "item-6",
@@ -538,17 +538,17 @@ export const messages = {
     hero: {
       badgePrefix: "New:",
       badgeText: "Bido has entered closed beta",
-      title: "While you wait for the customer to decide, the agent has already decided for them.",
+      title: "The agent already decided. Were you there?",
       description:
-        "Bido puts your company inside the decision — not in the banner the agent will never see.",
+        "Bido puts your company inside the agent's reasoning — at the moment the decision happens, not after.",
       infrastructureBy: "Infrastructure by:",
       waitlist: "Join the waitlist",
       requestPresentation: "Request a presentation",
     },
     home: {
-      headline: "Agents are already deciding. Your brand is not in the room.",
+      headline: "The next trillion users on the internet won't click on anything.",
       subheadline:
-        "Bido helps AI products monetize their traffic and helps brands be chosen at the moment of decision.",
+        "They're AI agents — and they're already deciding. Bido helps AI products monetize that traffic and companies be inside the decision.",
       useCases: {
         eyebrow: "Use cases created by the Bido team.",
         items: [
@@ -567,52 +567,52 @@ export const messages = {
       },
       audienceCards: {
         sponsors: {
-          label: "For Sponsors",
-          title: "Reach users at the moment of decision",
-          description: "Reach users at the exact moment of decision. No banner. No ignored click.",
+          label: "For Companies",
+          title: "Be inside the agent's reasoning before the decision",
+          description: "Qualified context at the right moment. No banner. No ignored click.",
         },
         devs: {
-          label: "For Devs",
-          title: "Monetize your agent with one skill",
-          description: "Monetize your agent with one skill. One command, automatic USDC revenue share.",
+          label: "For AI Products",
+          title: "Monetize every agent decision",
+          description: "One skill, and every intent query becomes revenue. Automatic USDC revenue share.",
         },
       },
     },
     sponsors: {
-      heroTitle: "While you wait for the customer to decide, the agent has already decided for them.",
+      heroTitle: "The agent already decided. Were you there?",
       heroDescription:
-        "Bido puts your company inside the decision — not in the banner the agent will never see.",
-      featuresTitle: "Built for brands that want to be where decisions happen.",
-      featuresDescription: "Bido brings structure to advertising in the age of AI agents.",
+        "Bido puts your company inside the agent's reasoning — at the moment the decision happens, not after.",
+      featuresTitle: "Built for companies that want to be where decisions happen.",
+      featuresDescription: "Bido brings structure to distribution in the age of AI agents.",
       features: [
         {
           title: "PIX deposits",
           desc: "No international card. No crypto. Fund in BRL and get your campaign live in minutes.",
         },
         {
-          title: "Privacy for Sponsors",
+          title: "Privacy for Companies",
           desc: "Budgets and bids are not exposed publicly. Your commercial data stays protected.",
         },
         {
           title: "Intent targeting",
-          desc: "Choose the exact queries where you want to appear. Your ad only runs when the search is relevant.",
+          desc: "Choose the exact queries where you want to appear. Your context only enters the reasoning when the search is relevant to your business.",
         },
         {
           title: "Real-time reporting",
-          desc: "Track queries, impressions, and decisions in one simple dashboard, no analyst required.",
+          desc: "Track queries, intents, and decisions in one simple dashboard, no analyst required.",
         },
       ],
     },
     build: {
-      title: "One skill. Your agents already know where to recommend.",
-      description: "Plug ad intelligence directly into your agent. One line, zero friction.",
+      title: "One skill. Qualified context inside your agent's reasoning.",
+      description: "No banner. No friction. Every decision becomes revenue.",
     },
     devs: {
-      badge: "For devs",
+      badge: "For AI products",
       title: "Skills built for agents.",
       titleMuted: "Not for you.",
       description:
-        "One command, your env vars, and your agent is already activating intent-based Ads",
+        "One command, your env vars, and your agent is already reasoning with sponsor context.",
       docsCta: "Read the docs",
       compatibility:
         "Works with any agent compatible with the Skill Spec: Claude Agents, OpenAI Assistants, LangChain, Mastra, and custom frameworks.",
@@ -684,13 +684,13 @@ export const messages = {
           { kind: "blank" },
           {
             kind: "output",
-            text: "● Ads enabled — your agent is already monetizing.",
+            text: "● Skill active — your agent is already reasoning with sponsor context.",
             className: "text-violet font-semibold",
             delay: 500,
           },
           {
             kind: "output",
-            text: "↳ Payouts in USDC go directly to your wallet on every recommendation.",
+            text: "↳ Payouts in USDC go directly to your wallet on every decision.",
             className: "text-muted-foreground",
             delay: 300,
           },
@@ -719,7 +719,7 @@ export const messages = {
             number: "02",
             title: "The Skill detects the intent",
             description:
-              "Bido analyzes the query in real time and identifies actionable intent — purchase, signup, learning, adoption, development, or any action that is valuable to sponsors.",
+              "Bido analyzes the query in real time and identifies actionable intent — purchase, signup, learning, adoption, development, or any action valuable to sponsors.",
             codeType: "none"
           },
           {
@@ -738,10 +738,10 @@ export const messages = {
           },
           {
             number: "05",
-            title: "Your agent delivers the sponsored recommendation",
+            title: "Sponsor context enters the agent's reasoning",
             description:
-              "The agent keeps full control of the experience and responds with a relevant, contextual suggestion.",
-            codeLabel: "sponsored recommendation",
+              "Before responding, the agent receives qualified context from the auction winner. The recommendation comes naturally from the agent — not from Bido.",
+            codeLabel: "contextual recommendation",
             code: '"I found flights to New York. LATAM has a discount on direct flights this week."',
             codeType: "response"
           },
@@ -777,13 +777,13 @@ export const messages = {
             id: "dev-item-3",
             title: "Do I lose control over my agent's response?",
             content:
-              "No. The Skill adds the monetization and sponsored recommendation layer, but your agent still controls the response experience and context.",
+              "No. The Skill injects qualified context into the agent's reasoning before the response. The agent still controls the experience — the recommendation comes naturally from it.",
           },
           {
             id: "dev-item-4",
             title: "How do payouts work?",
             content:
-              "When a valid sponsored recommendation happens, the revenue share is sent in USDC to your configured Solana wallet. No invoices and no manual payout cycle.",
+              "When a valid sponsored decision happens, the revenue share is sent in USDC to your configured Solana wallet. No invoices and no manual payout cycle.",
           },
           {
             id: "dev-item-5",
@@ -813,7 +813,7 @@ export const messages = {
       segment: "Segment",
       segmentPlaceholder: "Select a segment…",
       segmentOtherPlaceholder: "Which segment?",
-      budget: "Monthly ad budget",
+      budget: "Monthly budget",
       budgetPlaceholder: "Select a range…",
       aiUsers: "How many users does your AI platform have?",
       submit: "Reserve my spot",
@@ -826,8 +826,8 @@ export const messages = {
         aiUsersPlaceholder: "E.g. 25,000",
       },
       objectives: {
-        advertise: "Advertise",
-        monetize: "Monetize",
+        advertise: "Be inside the decision",
+        monetize: "Monetize my agent",
       },
       segments: {
         ecommerce: "E-commerce",
@@ -844,9 +844,9 @@ export const messages = {
       closeModal: "Close modal",
     },
     terminal: {
-      title: "See how users find you",
-      description: "Instead of an ignored banner, your brand appears as the answer at the exact moment of decision.",
-      windowTitle: "bido - live answer",
+      title: "See how you enter the decision",
+      description: "Instead of an ignored banner, your context enters the agent's reasoning at the exact moment of decision.",
+      windowTitle: "bido - live reasoning",
       promptLabel: "user",
       thinkingLabel: "ai",
       promptText: "What's the best flight option from GRU to JFK next week?",
@@ -878,7 +878,7 @@ export const messages = {
       moment: "Moment",
       audience: "Audience",
       afterSearch: "after search",
-      atPurchaseDecision: "at the purchase decision",
+      atPurchaseDecision: "inside the agent's reasoning",
       human: "human",
       aiAgent: "AI agent",
       clicks: "clicks",
@@ -888,40 +888,40 @@ export const messages = {
     },
     faq: {
       badge: "FAQ",
-      title: "Frequently asked questions about ads for agents",
+      title: "Frequently asked questions",
       description:
-        "The essentials to understand how Bido places your brand inside the decision flow of AI-guided products.",
+        "The essentials to understand how Bido places your company inside the decision flow of AI agents.",
       contactLead: "Didn't find what you need? Reach out to our team at ",
       questions: [
         {
           id: "item-1",
           title: "What is Bido?",
           content:
-            "Bido is an intent-auction layer for AI agents. Instead of competing for banners, brands compete for recommendations when the question happens.",
+            "Bido is an intent-based distribution layer for AI agents. Instead of competing for banners, companies compete to be inside the agent's reasoning when the question happens.",
         },
         {
           id: "item-2",
-          title: "How does a brand appear in the AI answer?",
+          title: "How does a company enter the AI's response?",
           content:
-            "When a query shows commercial intent, Bido runs a real-time auction between eligible sponsors and helps the agent choose the best sponsored recommendation inside the context of the question.",
+            "When a query shows commercial intent, Bido runs a real-time auction between eligible sponsors and injects the winner's context into the agent's reasoning — the recommendation comes naturally from the agent.",
         },
         {
           id: "item-3",
           title: "Does Bido replace Google Ads?",
           content:
-            "No. The idea is to open a new distribution channel for the age of agents. Google remains relevant for traditional search, while Bido organizes ads for AI-generated answers.",
+            "No. The idea is to open a new distribution channel for the age of agents. Google remains relevant for traditional search, while Bido organizes distribution for AI-generated decisions.",
         },
         {
           id: "item-4",
           title: "How does payment work?",
           content:
-            "The main model is pay-per-decision. Instead of paying for an empty impression, the brand defines how much it will pay when the recommendation actually enters the user's decision flow.",
+            "The model is pay-per-decision. Instead of paying for an empty impression, the company defines how much it will pay when its context actually enters the agent's reasoning flow.",
         },
         {
           id: "item-5",
           title: "Do I need crypto or a wallet to use it?",
           content:
-            "Not necessarily. The experience is designed to be simple for brands, including BRL deposits via PIX. The Solana infrastructure stays underneath.",
+            "Not necessarily. The experience is designed to be simple for companies, including BRL deposits via PIX. The Solana infrastructure stays underneath.",
         },
         {
           id: "item-6",
