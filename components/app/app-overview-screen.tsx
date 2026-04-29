@@ -4,28 +4,19 @@ import { DashboardHeader } from "@/components/dashboard/dashboard-header";
 import { MetricChart } from "@/components/dashboard/metric-chart";
 import { MiniStatChart } from "@/components/dashboard/mini-stat-chart";
 import { useI18n } from "@/components/providers/i18n-provider";
-import { useCampaigns } from "@/lib/campaign-store";
+import { useCampaigns, useCampaignSummary } from "@/lib/campaign-store";
 
 export function AppOverviewScreen() {
   const { formatCurrency } = useI18n();
-  const campaigns = useCampaigns();
-  const summary = campaigns.reduce(
-    (acc, campaign) => {
-      acc.budget += campaign.monthlyBudget;
-      acc.spend += campaign.spend;
-      acc.impressions += campaign.impressions;
-      acc.clicks += campaign.clicks;
-      acc.conversions += campaign.conversions;
-      acc.winRate += campaign.winRate;
-      return acc;
-    },
-    { budget: 0, spend: 0, impressions: 0, clicks: 0, conversions: 0, winRate: 0 },
-  );
-  const costPerDecision = summary.conversions > 0 ? summary.spend / summary.conversions : 0;
-  const auctionWinRate = campaigns.length ? summary.winRate / campaigns.length : 0;
+  const { campaigns, loading, error } = useCampaigns();
+  const { summary, loading: summaryLoading, error: summaryError } = useCampaignSummary();
+  const costPerDecision = campaigns.length
+    ? campaigns.reduce((sum, campaign) => sum + campaign.maxBidPerDecision, 0) / campaigns.length
+    : 0;
+  const auctionWinRate = summary?.avgWinRate ?? 0;
   const costPerDecisionItems = campaigns.map((campaign) => ({
     label: campaign.name.replace(" Brasil", "").split(" ").slice(0, 2).join(" "),
-    value: campaign.costPerDecision,
+    value: campaign.maxBidPerDecision,
   }));
   const winRateItems = campaigns.map((campaign) => ({
     label: campaign.name.replace(" Brasil", "").split(" ").slice(0, 2).join(" "),
@@ -35,6 +26,18 @@ export function AppOverviewScreen() {
   return (
     <>
       <DashboardHeader />
+
+      {error || summaryError ? (
+        <div className="mb-5 rounded-2xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+          {error ?? summaryError}
+        </div>
+      ) : null}
+
+      {loading && summaryLoading ? (
+        <div className="mb-5 rounded-2xl border border-border bg-card px-5 py-10 text-center text-sm text-muted-foreground">
+          Carregando dashboard...
+        </div>
+      ) : null}
 
       <div className="mb-5">
         <MetricChart campaigns={campaigns} />

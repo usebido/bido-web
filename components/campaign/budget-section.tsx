@@ -27,6 +27,7 @@ export function BudgetSection({ form, onChange }: BudgetSectionProps) {
             <input
               type="number"
               min={0}
+              step="0.01"
               value={form.totalBudget}
               onChange={(e) => onChange({ totalBudget: Number.parseFloat(e.target.value) || 0 })}
               className="h-10 w-full rounded-lg border border-input bg-background pr-3 pl-7 text-right text-sm text-foreground transition-[box-shadow,border-color] focus:outline-none focus:ring-2 focus:ring-ring/50 focus:border-ring"

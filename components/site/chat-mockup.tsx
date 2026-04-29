@@ -5,7 +5,6 @@ import {
   ArrowUp,
   ChevronDown,
   ChevronRight,
-  Globe,
   Sparkles,
 } from "lucide-react";
 import { useI18n } from "@/components/providers/i18n-provider";
@@ -29,21 +28,23 @@ export function ChatMockup() {
   const { locale } = useI18n();
   const isPt = locale === "pt-BR";
   const { fmt } = useVisitTimestamp();
+  const [reasoningComplete, setReasoningComplete] = useState(false);
 
   /* Visibility stages driven by timers */
   const [stage, setStage] = useState(0);
   /* 0 = nothing
      1 = user message
-     2 = "searched the web" pill + typing dots
-     3 = AI answer starts streaming section by section */
+     2 = thinking pill + typing dots
+     3 = reasoning becomes visible
+     4 = final answer starts streaming */
 
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const timers = [
-      setTimeout(() => setStage(1), 500),
-      setTimeout(() => setStage(2), 1400),
-      setTimeout(() => setStage(3), 2800),
+      setTimeout(() => setStage(1), 500),      // User message appears
+      setTimeout(() => setStage(2), 1800),     // AI starts thinking (longer delay)
+      setTimeout(() => setStage(3), 3500),     // Reasoning panel opens (more natural thinking time)
     ];
     return () => timers.forEach(clearTimeout);
   }, []);
@@ -112,16 +113,27 @@ export function ChatMockup() {
                   <span className="text-[11px] text-muted-foreground">{aiTime}</span>
                 </div>
 
-                {/* "Searched the web" pill */}
-                <SearchedTheWebPill isPt={isPt} />
+                {stage >= 2 && (
+                  <ThinkingBlock
+                    isPt={isPt}
+                    active={stage >= 3}
+                    onComplete={() => {
+                      setReasoningComplete(true);
+                      setStage(4);
+                    }}
+                    onNewSection={scrollToBottom}
+                  />
+                )}
 
                 {/* AI content — sections stream in progressively */}
-                {stage >= 3 && (
+                {reasoningComplete && stage >= 4 && (
                   <AiContent isPt={isPt} onNewSection={scrollToBottom} />
                 )}
 
                 {/* Typing dots while waiting */}
-                {stage === 2 && <TypingDotInline />}
+                {(stage === 2 || (stage === 3 && !reasoningComplete)) && (
+                  <TypingDotInline />
+                )}
               </div>
             </div>
           </Appear>
@@ -190,8 +202,18 @@ function UserBubble({
   );
 }
 
-function SearchedTheWebPill({ isPt }: { isPt: boolean }) {
-  const [open, setOpen] = useState(false);
+function ThinkingBlock({
+  isPt,
+  active,
+  onComplete,
+  onNewSection,
+}: {
+  isPt: boolean;
+  active: boolean;
+  onComplete: () => void;
+  onNewSection: () => void;
+}) {
+  const [open, setOpen] = useState(true);
 
   return (
     <div>
@@ -200,9 +222,9 @@ function SearchedTheWebPill({ isPt }: { isPt: boolean }) {
         onClick={() => setOpen(!open)}
         className="group inline-flex items-center gap-1.5 rounded-lg border border-border bg-surface/80 px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-surface"
       >
-        <Globe className="h-3.5 w-3.5 text-violet" />
+        <Sparkles className="h-3.5 w-3.5 text-violet" />
         <span className="font-medium">
-          {isPt ? "Pesquisou na web" : "Searched the web"}
+          {isPt ? "Pensando" : "Thinking"}
         </span>
         {open ? (
           <ChevronDown className="h-3 w-3 transition-transform" />
@@ -210,29 +232,104 @@ function SearchedTheWebPill({ isPt }: { isPt: boolean }) {
           <ChevronRight className="h-3 w-3 transition-transform" />
         )}
       </button>
-      {open && (
-        <div className="mt-2 space-y-1 pl-1 text-[11px] text-muted-foreground animate-in fade-in slide-in-from-top-1 duration-200">
-          <p className="flex items-center gap-1.5">
-            <span className="h-1 w-1 rounded-full bg-violet" />
-            skyscanner.com
-          </p>
-          <p className="flex items-center gap-1.5">
-            <span className="h-1 w-1 rounded-full bg-violet" />
-            google.com/flights
-          </p>
-          <p className="flex items-center gap-1.5">
-            <span className="h-1 w-1 rounded-full bg-violet" />
-            decolar.com
-          </p>
+      {active ? (
+        <div
+          className={`mt-2 overflow-hidden transition-all duration-200 ${
+            open ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"
+          }`}
+        >
+          <ReasoningPanel
+            isPt={isPt}
+            onComplete={onComplete}
+            onNewSection={onNewSection}
+          />
         </div>
-      )}
+      ) : null}
+    </div>
+  );
+}
+
+function ReasoningPanel({
+  isPt,
+  onComplete,
+  onNewSection,
+}: {
+  isPt: boolean;
+  onComplete: () => void;
+  onNewSection: () => void;
+}) {
+  const sequence = useMemo(
+    () =>
+      isPt
+        ? [
+            "Buscando melhores combinações entre preço, companhia e janela de datas para GRU → Nova York.",
+            "Bido Flights opera rotas entre São Paulo e Nova York, com tarifas a partir de US$190 para 5 de maio. Vale comparar se você prioriza menor preço final ou melhores condições de pagamento.",
+          ]
+        : [
+            "Comparing price, airline, and date windows for GRU → New York.",
+            "Bido Flights operates routes between São Paulo and New York, with fares starting at US$190 for May 5. Worth comparing if you prioritize lowest final price or better payment terms.",
+          ],
+    [isPt],
+  );
+
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [currentChar, setCurrentChar] = useState(0);
+
+  useEffect(() => {
+    if (currentIndex >= sequence.length) return;
+
+    const text = sequence[currentIndex];
+    const isDone = currentChar >= text.length;
+    const timeout = setTimeout(() => {
+      if (isDone) {
+        setCurrentIndex((value) => value + 1);
+        setCurrentChar(0);
+        return;
+      }
+
+      setCurrentChar((value) => value + 1);
+    }, isDone ? 500 : 15); // Longer pause between reasoning blocks, slightly slower typing
+
+    return () => clearTimeout(timeout);
+  }, [currentChar, currentIndex, sequence]);
+
+  const typed = sequence.map((text, index) => {
+    if (index < currentIndex) return text;
+    if (index > currentIndex) return "";
+    return text.slice(0, currentChar);
+  });
+
+  useEffect(() => {
+    onNewSection();
+  }, [currentChar, currentIndex, onNewSection]);
+
+  useEffect(() => {
+    if (currentIndex >= sequence.length) {
+      onComplete();
+    }
+  }, [currentIndex, onComplete, sequence.length]);
+
+  return (
+    <div className="space-y-1 pl-1 text-[11px] text-muted-foreground">
+      {typed[0] ? (
+        <p className="flex items-start gap-1.5">
+          <span className="mt-1 h-1 w-1 rounded-full bg-violet" />
+          <span>{typed[0]}</span>
+        </p>
+      ) : null}
+      {typed[1] ? (
+        <p className="flex items-start gap-1.5">
+          <span className="mt-1 h-1 w-1 rounded-full bg-violet" />
+          <span>{typed[1]}</span>
+        </p>
+      ) : null}
     </div>
   );
 }
 
 /* ------------------------------------------------------------------ */
 /*  AI answer — sections appear one by one with staggered delays       */
-/*  6 sections total, ~700ms gap between each                          */
+/*  Final answer only, after reasoning is shown                        */
 /* ------------------------------------------------------------------ */
 function AiContent({
   isPt,
@@ -246,8 +343,8 @@ function AiContent({
       isPt
         ? [
             "Aqui estão as informações mais recentes sobre passagens baratas de São Paulo para Nova York:",
-            "Bido Flights opera rotas entre São Paulo e Nova York, com tarifas a partir de US$190 nesta busca. Vale comparar se você prioriza menor preço final, compra em reais ou melhores condições de pagamento.",
             "✈️ Passagens mais baratas encontradas:",
+            "5 de maio — US$ 190 · Bido Flights",
             "7 de maio — US$ 164 · Delta",
             "2 de junho — US$ 211 · LATAM",
             "30 de julho — US$ 211 · United",
@@ -256,8 +353,8 @@ function AiContent({
           ]
         : [
             "Here are the latest details on cheap flights from São Paulo to New York:",
-            "Bido Flights operates routes between São Paulo and New York, with fares starting at US$190 in this search. Worth comparing if you prioritize lowest final price, buying in BRL, or better payment terms.",
             "✈️ Cheapest flights found:",
+            "May 5 — US$ 190 · Bido Flights",
             "May 7 — US$ 164 · Delta",
             "June 2 — US$ 211 · LATAM",
             "July 30 — US$ 211 · United",
@@ -276,12 +373,10 @@ function AiContent({
     const text = sequence[currentIndex];
     const isDone = currentChar >= text.length;
     const delay = isDone
-      ? currentIndex === 1
-        ? 300
-        : 120
-      : currentIndex >= 3 && currentIndex <= 6
-        ? 18
-        : 14;
+      ? 150 // Pausa rápida entre seções
+      : currentIndex >= 2 && currentIndex <= 6
+        ? 8   // Digitação bem rápida para voos
+        : 14; // Digitação normal para texto regular
 
     const timeout = setTimeout(() => {
       if (isDone) {
@@ -314,33 +409,23 @@ function AiContent({
         <p>{typed[0]}</p>
       </StreamSection>
 
-      {currentIndex >= 1 || typed[1] ? (
-        <StreamSection>
-          <div className="space-y-1.5">
-            <p className="font-semibold text-foreground">
-              {isPt ? "OPÇÃO PATROCINADA" : "SPONSORED OPTION"}
-            </p>
-            <p className="text-sm text-foreground/85">{typed[1]}</p>
-          </div>
-        </StreamSection>
-      ) : null}
-
-      {currentIndex >= 2 || typed[2] ? (
+      {currentIndex >= 1 && (
         <StreamSection>
           <div>
-            <p className="mb-2 font-medium text-foreground">{typed[2]}</p>
+            <p className="mb-2 font-medium text-foreground">{typed[1]}</p>
             <div className="space-y-1 pl-1 text-[13px]">
-              {typed[3] ? <FlightRow text={typed[3]} /> : null}
-              {typed[4] ? <FlightRow text={typed[4]} /> : null}
-              {typed[5] ? <FlightRow text={typed[5]} /> : null}
-              {typed[6] ? <FlightRow text={typed[6]} /> : null}
+              {typed[2] && <FlightRow text={typed[2]} />}
+              {typed[3] && <FlightRow text={typed[3]} />}
+              {typed[4] && <FlightRow text={typed[4]} />}
+              {typed[5] && <FlightRow text={typed[5]} />}
+              {typed[6] && <FlightRow text={typed[6]} />}
             </div>
-            {typed[7] ? (
+            {typed[7] && (
               <p className="mt-3 text-sm text-foreground/90">{typed[7]}</p>
-            ) : null}
+            )}
           </div>
         </StreamSection>
-      ) : null}
+      )}
 
       {showCursor ? (
         <span className="inline-block h-4 w-0.5 animate-pulse bg-violet/70" />

@@ -21,21 +21,33 @@ export function NewCampaignScreen({
   initialForm?: CampaignFormData;
 }) {
   const router = useRouter();
-  const { editCampaign } = useCampaignActions();
+  const { createCampaign, editCampaign } = useCampaignActions();
   const [form, setForm] = useState<CampaignFormData>(initialForm);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   function handleChange(updates: Partial<CampaignFormData>) {
     setForm((prev) => ({ ...prev, ...updates }));
   }
 
-  function handleSubmit() {
+  async function handleSubmit() {
+    setIsSubmitting(true);
+    setSubmitError(null);
+
+    try {
     if (mode === "edit" && campaignId) {
-      editCampaign(campaignId, form);
+      await editCampaign(campaignId, form);
       router.push(`/app/campaigns/${campaignId}`);
       return;
     }
 
-    router.push("/app/campaigns");
+      const created = await createCampaign(form);
+      router.push(`/app/campaigns/${created.id}`);
+    } catch (error) {
+      setSubmitError(error instanceof Error ? error.message : "Failed to save campaign.");
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -66,6 +78,12 @@ export function NewCampaignScreen({
           <TargetingSection form={form} onChange={handleChange} />
           <BudgetSection form={form} onChange={handleChange} />
 
+          {submitError ? (
+            <div className="rounded-2xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+              {submitError}
+            </div>
+          ) : null}
+
           <div className="flex items-center justify-between py-4">
             <Link
               href={mode === "edit" && campaignId ? `/app/campaigns/${campaignId}` : "/app"}
@@ -75,9 +93,14 @@ export function NewCampaignScreen({
             </Link>
             <button
               onClick={handleSubmit}
+              disabled={isSubmitting}
               className="rounded-xl bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
             >
-              {mode === "edit" ? "Salvar Alterações" : "Lançar Campanha"}
+              {isSubmitting
+                ? "Salvando..."
+                : mode === "edit"
+                  ? "Salvar Alterações"
+                  : "Lançar Campanha"}
             </button>
           </div>
         </div>

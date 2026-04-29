@@ -168,7 +168,7 @@ export function AppDashboardLayout({ children }: { children: React.ReactNode }) 
                 Retornar Home
               </Link>
               <Link
-                href="/app/campaigns"
+                href="/app/campaigns/new"
                 className="flex w-full items-center justify-center gap-2 rounded-2xl bg-violet px-4 py-3 text-sm font-semibold text-violet-foreground transition-all duration-200 hover:bg-violet/90"
                 onClick={() => {
                   setSidebarOpen(false);

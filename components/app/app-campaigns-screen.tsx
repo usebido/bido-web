@@ -8,7 +8,7 @@ import { useI18n } from "@/components/providers/i18n-provider";
 
 export function AppCampaignsScreen() {
   const { formatCurrency, formatDate } = useI18n();
-  const campaigns = useCampaigns();
+  const { campaigns, loading, error } = useCampaigns();
 
   return (
     <>
@@ -20,6 +20,11 @@ export function AppCampaignsScreen() {
       </header>
 
       <section className="rounded-2xl border border-border bg-card p-3 sm:p-5">
+        {error ? (
+          <div className="rounded-2xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+            {error}
+          </div>
+        ) : null}
         <Table>
           <Table.Colgroup>
             <Table.Col className="w-[28%]" />
@@ -42,6 +47,13 @@ export function AppCampaignsScreen() {
             </Table.Row>
           </Table.Header>
           <Table.Body interactive striped>
+            {loading ? (
+              <Table.Row>
+                <Table.Cell colSpan={7} className="py-10 text-center text-sm text-muted-foreground">
+                  Carregando campanhas...
+                </Table.Cell>
+              </Table.Row>
+            ) : null}
             {campaigns.map((campaign) => (
               <Table.Row key={campaign.id}>
                 <Table.Cell>
@@ -65,6 +77,13 @@ export function AppCampaignsScreen() {
                 </Table.Cell>
               </Table.Row>
             ))}
+            {!loading && campaigns.length === 0 ? (
+              <Table.Row>
+                <Table.Cell colSpan={7} className="py-10 text-center text-sm text-muted-foreground">
+                  Nenhuma campanha encontrada.
+                </Table.Cell>
+              </Table.Row>
+            ) : null}
           </Table.Body>
           <Table.Footer>
             <Table.Row>
@@ -83,7 +102,7 @@ export function AppCampaignsScreen() {
                   : "0.0"}
                 %
               </Table.Cell>
-              <Table.Cell colSpan={2} />
+              <Table.Cell colSpan={2}> </Table.Cell>
             </Table.Row>
           </Table.Footer>
         </Table>

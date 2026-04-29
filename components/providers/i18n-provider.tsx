@@ -18,9 +18,7 @@ type I18nContextValue = {
 
 const I18nContext = createContext<I18nContextValue | null>(null);
 
-function getInitialLocale(): Locale {
-  if (typeof window === "undefined") return defaultLocale;
-
+function getPreferredLocale(): Locale {
   const saved = window.localStorage.getItem(STORAGE_KEY);
   if (saved && locales.includes(saved as Locale)) return saved as Locale;
 
@@ -29,7 +27,12 @@ function getInitialLocale(): Locale {
 }
 
 export function I18nProvider({ children }: { children: React.ReactNode }) {
-  const [locale, setLocaleState] = useState<Locale>(() => getInitialLocale());
+  const [locale, setLocaleState] = useState<Locale>(defaultLocale);
+
+  useEffect(() => {
+    const preferredLocale = getPreferredLocale();
+    setLocaleState((current) => (current === preferredLocale ? current : preferredLocale));
+  }, []);
 
   useEffect(() => {
     window.localStorage.setItem(STORAGE_KEY, locale);

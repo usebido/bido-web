@@ -51,24 +51,23 @@ export function MetricChart({ campaigns }: { campaigns: CampaignRecord[] }) {
   ];
 
   const active = tabs.find((tab) => tab.key === activeTab) ?? tabs[0];
-  const chartConfig =
-    activeTab === "ctd"
-      ? ({
-          value: {
-            label: "CTD",
-            color: "#6366f1",
-          },
-        } satisfies ChartConfig)
-      : ({
-          spend: {
-            label: "Gasto",
-            color: "#10b981",
-          },
-          remaining: {
-            label: "Disponível",
-            color: "#dfe6dc",
-          },
-        } satisfies ChartConfig);
+  const ctdChartConfig: ChartConfig = {
+    value: {
+      label: "CTD",
+      color: "#6366f1",
+    },
+  };
+  const spendChartConfig: ChartConfig = {
+    spend: {
+      label: "Gasto",
+      color: "#10b981",
+    },
+    remaining: {
+      label: "Disponível",
+      color: "#dfe6dc",
+    },
+  };
+  const chartConfig: ChartConfig = activeTab === "ctd" ? ctdChartConfig : spendChartConfig;
 
   return (
     <div className="overflow-hidden rounded-2xl border border-border bg-card">
