@@ -1,280 +1,232 @@
-# BIDO App
+# Bido Solana
 
-MVP do painel de campanhas da BIDO para anúncios em respostas de IA.
+Projeto completo da Bido com:
 
-O app foi estruturado para um fluxo simples:
-- criar campanha
-- visualizar performance consolidada
-- abrir uma campanha específica
-- editar, pausar e remover campanhas
+- front-end em `Next.js` na raiz do repositório
+- back-end em `NestJS` dentro de `backend/`
+- relay de transações com `Kora` em `programs/bido-campaign-program/kora/`
 
-## Stack
+## Estrutura
 
-- Next.js 16
-- React 19
-- TypeScript
-- Tailwind CSS 4
-- shadcn-style project structure
-- Radix UI
-- Recharts
+```text
+.
+├─ app/                                   Front-end Next.js
+├─ backend/                               API NestJS + Prisma
+├─ programs/bido-campaign-program/kora/   Config local do Kora
+└─ programs/bido-campaign-program/        Programa Solana
+```
 
-O projeto já está configurado com:
-- componentes UI em `components/ui`
-- CSS global em `app/globals.css`
-- aliases em `components.json`
+## Pré-requisitos
 
-## Rodando localmente
+- Node.js 20+
+- npm
+- PostgreSQL rodando localmente ou remoto
+- binário `kora` instalado e disponível no PATH
+
+## 1. Instalar dependências
+
+Front-end:
 
 ```bash
 npm install
-npm run dev
 ```
 
-Abra `http://localhost:3000`.
+Back-end:
 
-## Estrutura do app
+```bash
+cd backend
+npm install
+```
 
-### Rotas principais
+## 2. Configurar variáveis de ambiente
 
-- `app/app/page.tsx`
-  overview do produto
-- `app/app/campaigns/page.tsx`
-  tabela de campanhas
-- `app/app/campaigns/new/page.tsx`
-  criação de campanha
-- `app/app/campaigns/[campaignId]/page.tsx`
-  detalhe da campanha
-- `app/app/campaigns/[campaignId]/edit/page.tsx`
-  edição da campanha
+### Front-end
 
-### Layout autenticado
+Crie o arquivo `.env` na raiz:
 
-O shell principal do app fica em:
-- `components/app/app-dashboard-layout.tsx`
+```env
+NEXT_PUBLIC_PRIVY_APP_ID=seu-privy-app-id
+NEXT_PUBLIC_LOGIN_ENABLED=true
+NEXT_PUBLIC_SOLANA_NETWORK=devnet
+NEXT_PUBLIC_SOLANA_RPC_URL=https://api.devnet.solana.com
+NEXT_PUBLIC_BIDO_API_BASE=http://localhost:3001/api
+NEXT_PUBLIC_SOLANA_USDC_MINT=4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU
+NEXT_PUBLIC_KORA_RPC_URL=http://127.0.0.1:8080
+```
 
-Ele controla:
-- header com `BIDO`
-- sidebar
-- navegação entre `Visão geral` e `Campanhas`
-- CTA de `Nova campanha`
+Observações:
 
-## Fluxos do MVP
+- `NEXT_PUBLIC_BIDO_API_BASE` é opcional no código, mas vale fixar explicitamente.
+- `NEXT_PUBLIC_SOLANA_USDC_MINT` usa o mint de USDC em devnet.
 
-### 1. Visão geral
+### Back-end
 
-Arquivo principal:
-- `components/app/app-overview-screen.tsx`
+Copie o exemplo:
 
-Objetivo:
-- mostrar um panorama consolidado de todas as campanhas
+```bash
+cd backend
+cp .env.example .env
+```
 
-O overview usa dados agregados de todas as campanhas disponíveis no store local do app.
+Preencha ao menos:
 
-Métricas atuais:
-- `CTD`
-- `Spend`
-- `Custo por Decisão`
-- `Win Rate no Leilão`
+```env
+NODE_ENV=development
+PORT=3001
+API_PREFIX=api
+CORS_ORIGINS=http://localhost:3000
 
-Observação importante:
-- como é um MVP, o overview prioriza comparações e snapshots atuais por campanha, não análises históricas profundas
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/bido?schema=public
+DIRECT_URL=postgresql://postgres:postgres@localhost:5432/bido?schema=public
 
-### 2. Lista de campanhas
+PRIVY_APP_ID=seu-privy-app-id
+PRIVY_APP_SECRET=seu-privy-app-secret
 
-Arquivo principal:
-- `components/app/app-campaigns-screen.tsx`
+SOLANA_RPC_URL=https://api.devnet.solana.com
+SOLANA_CLUSTER=devnet
+SOLANA_USDC_MINT=4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU
+SOLANA_CAMPAIGN_PROGRAM_ID=seu-program-id
 
-Tabela com:
-- campanha
-- categoria
-- budget
-- gasto
-- CTD
-- data de atualização
+KORA_RPC_URL=http://127.0.0.1:8080
+```
 
-Componente de tabela:
-- `components/ui/table.tsx`
+### Kora
 
-### 3. Criar campanha
+Crie ou ajuste o arquivo `programs/bido-campaign-program/kora/.env`:
 
-Arquivo principal:
-- `components/app/new-campaign-screen.tsx`
+```env
+KORA_PRIVATE_KEY=sua-private-key-base58-ou-array
+CONFIG=/Users/joaorubensbelluzzoneto/Documents/bido-solana/programs/bido-campaign-program/kora/kora.toml
+SIGNERS=/Users/joaorubensbelluzzoneto/Documents/bido-solana/programs/bido-campaign-program/kora/signers.toml
+RPC_URL=https://api.devnet.solana.com
+```
 
-Seções do formulário:
+O `signers.toml` usa a variável `KORA_PRIVATE_KEY` para carregar o signer em memória.
 
-#### Sua Oferta
+## 3. Preparar banco de dados
 
-- `Nome da Marca / Produto`
-- `Oferta que deseja aparecer`
-- `URL de Destino`
+Com o PostgreSQL disponível:
 
-Arquivos:
-- `components/campaign/ad-info-section.tsx`
+```bash
+cd backend
+npm run prisma:generate
+npm run prisma:migrate -- --name init
+```
 
-#### Onde Quer Aparecer?
+Se quiser popular dados iniciais:
 
-- `Categoria de Intenção`
+```bash
+cd backend
+npm run prisma:seed
+```
 
-Arquivos:
-- `components/campaign/targeting-section.tsx`
+## 4. Subir o Kora
 
-Categorias atuais:
-- Viagens
-- E-commerce
-- SaaS
-- Finanças
-- Educação
+Opção direta:
 
-#### Orçamento & Lances
+```bash
+cd programs/bido-campaign-program/kora
+set -a
+source .env
+set +a
+kora --config /Users/joaorubensbelluzzoneto/Documents/bido-solana/programs/bido-campaign-program/kora/kora.toml --rpc-url https://api.devnet.solana.com rpc start --signers-config /Users/joaorubensbelluzzoneto/Documents/bido-solana/programs/bido-campaign-program/kora/signers.toml
+```
 
-- `Orçamento Total`
-- `Lance Máximo por Recomendação`
+Opção via script:
 
-Arquivos:
-- `components/campaign/budget-section.tsx`
+```bash
+cd programs/bido-campaign-program/kora
+./run-kora.sh
+```
 
-#### Preview lateral
-
-Arquivo:
-- `components/campaign/ad-preview.tsx`
-
-### 4. Editar campanha
-
-A edição reaproveita exatamente o mesmo formulário da criação.
-
-Arquivos:
-- `components/app/edit-campaign-screen.tsx`
-- `components/app/new-campaign-screen.tsx`
-
-Comportamento:
-- `Editar` no detalhe da campanha abre o form preenchido
-- ao salvar, o app volta para a página da campanha
-
-### 5. Pausar e remover campanha
-
-No detalhe da campanha existe um menu de ações:
-- `Editar`
-- `Pausar` ou `Retomar`
-- `Remover`
-
-Arquivos:
-- `components/ui/dropdown-menu.tsx`
-- `components/ui/confirm-dialog.tsx`
-
-Comportamento:
-- `Pausar` abre confirmação e alterna status entre `Ativa` e `Pausada`
-- `Remover` abre confirmação e exclui a campanha do store local
-
-## Store de campanhas
-
-Arquivo:
-- `lib/campaign-store.ts`
-
-Hoje o app usa um store local no navegador com `localStorage`.
-
-Ele é responsável por:
-- ler campanhas
-- salvar edições
-- pausar/retomar
-- remover
-- manter lista, detalhe e overview sincronizados
-
-Chave usada:
-- `bido-campaigns`
-
-Os dados iniciais mockados ficam em:
-- `lib/app-campaign-data.ts`
-
-## Métricas usadas no app
-
-### CTD
-
-Taxa de decisão associada à campanha.
-
-### CDR (Decision Rate)
-
-Taxa de decisão exibida no bloco de `Campaign Performance`.
-
-### Loser Rate
-
-Calculado como:
+Por padrão, o Kora sobe em:
 
 ```text
-100 - Win Rate
+http://127.0.0.1:8080
 ```
 
-### Win Rate
+## 5. Subir o back-end
 
-Percentual de vitórias no leilão.
+```bash
+cd backend
+npm run start:dev
+```
 
-### Custo por Decisão
+Endpoints locais:
 
-Valor médio por decisão associada à campanha.
+- API: `http://localhost:3001/api`
+- Swagger: `http://localhost:3001/api/docs`
 
-### Spend
+## 6. Subir o front-end
 
-Valor já gasto dentro do orçamento da campanha.
-
-## Componentes de gráfico
-
-### Overview
-
-Arquivos:
-- `components/dashboard/metric-chart.tsx`
-- `components/dashboard/mini-stat-chart.tsx`
-
-Uso:
-- panorama consolidado das campanhas
-
-### Detalhe da campanha
-
-Arquivo:
-- `components/app/app-campaign-detail-screen.tsx`
-
-Uso:
-- bloco `Campaign Performance`
-
-Infra base de chart:
-- `components/ui/area-charts-2.tsx`
-
-## UI components relevantes
-
-- `components/ui/button.tsx`
-- `components/ui/card.tsx`
-- `components/ui/select.tsx`
-- `components/ui/dropdown-menu.tsx`
-- `components/ui/confirm-dialog.tsx`
-- `components/ui/table.tsx`
-
-## Estado atual do MVP
-
-O que já está funcionando:
-- dashboard autenticado
-- sidebar
-- overview consolidado
-- tabela de campanhas
-- criação de campanha
-- edição de campanha
-- pausar/retomar campanha
-- remover campanha
-- atualização local imediata entre telas
-
-O que ainda é simplificado:
-- dados ainda são mockados na origem
-- persistência é local no navegador
-- não existe backend real para campanhas
-- parte dos gráficos ainda usa séries sintéticas leves para visualização de MVP
-
-## Convenções úteis
-
-- componentes visuais compartilhados ficam em `components/ui`
-- telas do app ficam em `components/app`
-- lógica e dados ficam em `lib`
-- estilos globais ficam em `app/globals.css`
-
-## Comandos úteis
+Na raiz do projeto:
 
 ```bash
 npm run dev
+```
+
+App local:
+
+```text
+http://localhost:3000
+```
+
+## Ordem recomendada para desenvolvimento
+
+1. Suba o PostgreSQL
+2. Rode as migrations do Prisma
+3. Suba o `kora`
+4. Suba o back-end
+5. Suba o front-end
+
+## Comandos úteis
+
+Front-end:
+
+```bash
+npm run dev
+npm run build
 npm run lint
 ```
+
+Back-end:
+
+```bash
+cd backend
+npm run start:dev
+npm run build
+npm run lint
+npm run test
+```
+
+Prisma:
+
+```bash
+cd backend
+npm run prisma:generate
+npm run prisma:migrate -- --name init
+npm run prisma:studio
+npm run prisma:seed
+```
+
+## Troubleshooting
+
+### O front-end não fala com a API
+
+- confirme `NEXT_PUBLIC_BIDO_API_BASE=http://localhost:3001/api`
+- confirme `CORS_ORIGINS=http://localhost:3000`
+- confirme que o back-end está de pé na porta `3001`
+
+### O back-end falha ao iniciar
+
+- valide `DATABASE_URL` e `DIRECT_URL`
+- rode `npm run prisma:generate`
+- rode `npm run prisma:migrate -- --name init`
+
+### O fluxo patrocinado via Kora não funciona
+
+- confirme que o `kora` está rodando em `http://127.0.0.1:8080`
+- confirme `KORA_RPC_URL` no back-end
+- confirme `NEXT_PUBLIC_KORA_RPC_URL` no front-end
+- confirme que `KORA_PRIVATE_KEY` está válida
+- confirme `SOLANA_CAMPAIGN_PROGRAM_ID` apontando para o programa implantado
