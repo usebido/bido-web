@@ -18,8 +18,9 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Bido — Intent Auctions for the Agent Economy",
-  description: "Real-time intent auctions for the agent economy, powered by Solana.",
+  title: "Bido — Real-Time Intent Auctions for AI Agents",
+  description:
+    "Bido enables real-time intent auctions inside AI agents, injecting sponsored context at decision-time and monetizing reasoning with onchain micropayments.",
 };
 
 export default function RootLayout({

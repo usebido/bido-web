@@ -15,6 +15,7 @@ export function BrandLogo({
         alt="Bido"
         width={640}
         height={180}
+        sizes="(max-width: 768px) 88px, 118px"
         priority={priority}
         className="h-auto w-full dark:hidden"
       />
@@ -23,6 +24,7 @@ export function BrandLogo({
         alt="Bido"
         width={640}
         height={180}
+        sizes="(max-width: 768px) 88px, 118px"
         priority={priority}
         className="hidden h-auto w-full dark:block"
       />
