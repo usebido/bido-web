@@ -184,12 +184,12 @@ export const app = {
         period30d: "Últimos 30 dias",
         period90d: "Últimos 90 dias",
         topMetrics: {
-          cdr: "CDR (Decision Rate)",
+          ctd: "CTD",
           loserRate: "Loser Rate",
           winRate: "Win Rate",
         },
         chartLegend: {
-          cdr: "CDR",
+          ctd: "CTD",
           loserRate: "Loser Rate",
           winRate: "Win Rate",
         },
@@ -436,12 +436,12 @@ export const app = {
         period30d: "Last 30 days",
         period90d: "Last 90 days",
         topMetrics: {
-          cdr: "CDR (Decision Rate)",
+          ctd: "CTD",
           loserRate: "Loser Rate",
           winRate: "Win Rate",
         },
         chartLegend: {
-          cdr: "CDR",
+          ctd: "CTD",
           loserRate: "Loser Rate",
           winRate: "Win Rate",
         },

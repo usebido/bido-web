@@ -84,7 +84,7 @@ export function AppCampaignsScreen() {
                 <Table.Cell>{campaign.segment}</Table.Cell>
                 <Table.Cell>{formatCurrency(campaign.monthlyBudget)}</Table.Cell>
                 <Table.Cell>{formatCurrency(campaign.spend)}</Table.Cell>
-                <Table.Cell>{campaign.ctd.toFixed(1)}%</Table.Cell>
+                <Table.Cell>{campaign.ctd.toFixed(0)}</Table.Cell>
                 <Table.Cell>{formatDate(campaign.updatedAt, { dateStyle: "medium" })}</Table.Cell>
                 <Table.Cell>
                   <Link
@@ -117,10 +117,7 @@ export function AppCampaignsScreen() {
                 {formatCurrency(campaigns.reduce((sum, campaign) => sum + campaign.spend, 0))}
               </Table.Cell>
               <Table.Cell className="font-medium text-foreground">
-                {campaigns.length
-                  ? (campaigns.reduce((sum, campaign) => sum + campaign.ctd, 0) / campaigns.length).toFixed(1)
-                  : "0.0"}
-                %
+                {campaigns.reduce((sum, campaign) => sum + campaign.ctd, 0).toFixed(0)}
               </Table.Cell>
               <Table.Cell colSpan={2}> </Table.Cell>
             </Table.Row>

@@ -7,7 +7,7 @@ import { ArrowLeft, ChevronDown, ExternalLink, Pencil, Pause, Rocket, Trash2, Tr
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import { useWallets } from "@privy-io/react-auth/solana";
 import { getAssociatedTokenAddressSync } from "@solana/spl-token";
-import { Connection, LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
+import { Connection, PublicKey } from "@solana/web3.js";
 import bs58 from "bs58";
 import {
   ChartContainer,
@@ -93,7 +93,6 @@ export function AppCampaignDetailScreen({ campaignId }: { campaignId: string }) 
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [fundingError, setFundingError] = useState<string | null>(null);
   const [fundingPending, setFundingPending] = useState(false);
-  const [solBalance, setSolBalance] = useState<number | null>(null);
   const [usdcBalance, setUsdcBalance] = useState<number | null>(null);
   const [balanceError, setBalanceError] = useState<string | null>(null);
   const [balanceLoading, setBalanceLoading] = useState(false);
@@ -105,7 +104,7 @@ export function AppCampaignDetailScreen({ campaignId }: { campaignId: string }) 
   const activeWallet = wallets[0] ?? null;
   const chartConfig = {
     cdr: {
-      label: t.performance.chartLegend.cdr,
+      label: t.performance.chartLegend.ctd,
       color: "#4f5cff",
     },
     loserRate: {
@@ -121,22 +120,24 @@ export function AppCampaignDetailScreen({ campaignId }: { campaignId: string }) 
   const currentCampaign = campaign;
   const topMetrics = [
     {
-      key: "recommendations",
-      label: t.performance.topMetrics.cdr,
-      value: `${analytics?.topMetrics.ctd.toFixed(1) ?? "0.0"}%`,
+      key: "ctd",
+      label: t.performance.topMetrics.ctd,
+      value: formatNumber(analytics?.topMetrics.ctd ?? 0, {
+        maximumFractionDigits: 0,
+      }),
       change: 0,
     },
     {
-      key: "decisions",
+      key: "loserRate",
       label: t.performance.topMetrics.loserRate,
-      value: `${analytics?.topMetrics.loserRate.toFixed(1) ?? "100.0"}%`,
-      change: 3,
+      value: `${analytics?.topMetrics.loserRate.toFixed(1) ?? "0.0"}%`,
+      change: 0,
     },
     {
       key: "winRate",
       label: t.performance.topMetrics.winRate,
       value: `${analytics?.topMetrics.winRate.toFixed(1) ?? "0.0"}%`,
-      change: 8,
+      change: 0,
     },
   ] as const;
 
@@ -159,16 +160,12 @@ export function AppCampaignDetailScreen({ campaignId }: { campaignId: string }) 
         const mint = new PublicKey(usdcMintAddress);
         const ata = getAssociatedTokenAddressSync(mint, owner, false);
 
-        const [lamports, tokenBalance] = await Promise.all([
-          connection.getBalance(owner, "confirmed"),
-          connection.getTokenAccountBalance(ata, "confirmed").catch(() => null),
-        ]);
+        const tokenBalance = await connection.getTokenAccountBalance(ata, "confirmed").catch(() => null);
 
         if (cancelled) {
           return;
         }
 
-        setSolBalance(lamports / LAMPORTS_PER_SOL);
         setUsdcBalance(tokenBalance ? Number(tokenBalance.value.uiAmountString ?? "0") : 0);
       } catch (currentError) {
         if (cancelled) {
@@ -191,7 +188,6 @@ export function AppCampaignDetailScreen({ campaignId }: { campaignId: string }) 
   }, [activeWallet?.address, balanceFetchFailedLabel, walletsReady]);
 
   const requiredUsdc = currentCampaign?.monthlyBudget ?? 0;
-  const effectiveSolBalance = activeWallet ? solBalance : null;
   const effectiveUsdcBalance = activeWallet ? usdcBalance : null;
   const hasEnoughUsdc = effectiveUsdcBalance !== null && effectiveUsdcBalance >= requiredUsdc;
   const activationDisabledReason = !walletsReady
@@ -514,15 +510,7 @@ export function AppCampaignDetailScreen({ campaignId }: { campaignId: string }) 
           </div>
         ) : null}
 
-        <div className="mt-4 grid gap-3 md:grid-cols-5">
-          <KpiCard
-            label={t.onchain.budgetOnChain}
-            value={formatCurrency(currentCampaign.monthlyBudget, {
-              currency: "USD",
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })}
-          />
+        <div className="mt-4 grid gap-3 md:grid-cols-3">
           <KpiCard
             label={messages.app.dashboard.costPerDecision}
             value={formatCurrency(currentCampaign.maxBidPerDecision, {
@@ -541,17 +529,6 @@ export function AppCampaignDetailScreen({ campaignId }: { campaignId: string }) 
                     minimumFractionDigits: 2,
                     maximumFractionDigits: 4,
                   })
-            }
-          />
-          <KpiCard
-            label={t.onchain.solBalance}
-            value={
-              balanceLoading
-                ? t.onchain.loading
-                : `${formatNumber(effectiveSolBalance ?? 0, {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 4,
-                  })} SOL`
             }
           />
           <KpiCard

@@ -11,12 +11,10 @@ function shortName(name: string) {
 }
 
 export function MetricChart({ campaigns }: { campaigns: CampaignRecord[] }) {
-  const { formatCurrency, messages } = useI18n();
+  const { formatCurrency, formatNumber, messages } = useI18n();
   const [activeTab, setActiveTab] = useState<"ctd" | "spend">("ctd");
 
-  const averageCtd = campaigns.length
-    ? campaigns.reduce((sum, campaign) => sum + campaign.ctd, 0) / campaigns.length
-    : 0;
+  const totalCtd = campaigns.reduce((sum, campaign) => sum + campaign.ctd, 0);
   const totalSpend = campaigns.reduce((sum, campaign) => sum + campaign.spend, 0);
 
   const ctdData = useMemo(
@@ -44,7 +42,7 @@ export function MetricChart({ campaigns }: { campaigns: CampaignRecord[] }) {
     {
       key: "ctd" as const,
       label: messages.app.metricChart.ctd,
-      value: `${averageCtd.toFixed(1)}%`,
+      value: formatNumber(totalCtd, { maximumFractionDigits: 0 }),
       color: "#6366f1",
     },
     {
@@ -105,7 +103,7 @@ export function MetricChart({ campaigns }: { campaigns: CampaignRecord[] }) {
             <BarChart data={ctdData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
               <CartesianGrid vertical={false} stroke="var(--border)" strokeOpacity={0.45} />
               <XAxis dataKey="name" tickLine={false} axisLine={false} tickMargin={10} />
-              <YAxis tickLine={false} axisLine={false} width={44} tickFormatter={(value) => `${value}%`} />
+              <YAxis tickLine={false} axisLine={false} width={44} allowDecimals={false} />
               <ChartTooltip
                 cursor={{ fill: "var(--muted)", opacity: 0.2 }}
                 content={
@@ -113,7 +111,7 @@ export function MetricChart({ campaigns }: { campaigns: CampaignRecord[] }) {
                     labelFormatter={(_, payload) => payload?.[0]?.payload?.fullName}
                     formatter={(value) => (
                       <span className="text-foreground font-mono font-medium tabular-nums">
-                        {Number(value).toFixed(1)}%
+                        {formatNumber(Number(value), { maximumFractionDigits: 0 })}
                       </span>
                     )}
                   />
