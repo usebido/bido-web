@@ -33,7 +33,7 @@ export function MetricChart({ campaigns }: { campaigns: CampaignRecord[] }) {
         name: shortName(campaign.name),
         fullName: campaign.name,
         spend: campaign.spend,
-        remaining: Math.max(campaign.monthlyBudget - campaign.spend, 0),
+        remaining: campaign.remainingBudget,
       })),
     [campaigns],
   );

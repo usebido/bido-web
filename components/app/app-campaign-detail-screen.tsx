@@ -23,7 +23,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ShimmerBlock } from "@/components/ui/animated-loading-skeleton";
 import { OrbitalLoader } from "@/components/ui/orbital-loader";
 import { useI18n } from "@/components/providers/i18n-provider";
-import { useCampaign, useCampaignActions, useCampaignAnalytics } from "@/lib/hooks/use-campaigns";
+import { useCampaign, useCampaignActions, useCampaignAnalytics, useCampaignTransactions } from "@/lib/hooks/use-campaigns";
 
 function KpiCard({
   label,
@@ -71,9 +71,14 @@ function explorerUrl(address: string) {
   return `https://explorer.solana.com/address/${address}?cluster=${cluster}`;
 }
 
+function explorerTxUrl(signature: string) {
+  const cluster = process.env.NEXT_PUBLIC_SOLANA_NETWORK ?? "devnet";
+  return `https://explorer.solana.com/tx/${signature}?cluster=${cluster}`;
+}
+
 export function AppCampaignDetailScreen({ campaignId }: { campaignId: string }) {
   const router = useRouter();
-  const { formatCurrency, formatNumber, messages, replace } = useI18n();
+  const { formatCurrency, formatDate, formatNumber, messages, replace } = useI18n();
   const t = messages.app.campaignDetail;
   const balanceFetchFailedLabel = t.onchain.balanceFetchFailed;
   const { ready: walletsReady, wallets } = useWallets();
@@ -101,6 +106,10 @@ export function AppCampaignDetailScreen({ campaignId }: { campaignId: string }) 
     loading: analyticsLoading,
     error: analyticsError,
   } = useCampaignAnalytics(campaignId, selectedPeriod);
+  const {
+    transactions,
+    loading: transactionsLoading,
+  } = useCampaignTransactions(campaignId, 100);
   const activeWallet = wallets[0] ?? null;
   const chartConfig = {
     cdr: {
@@ -221,6 +230,18 @@ export function AppCampaignDetailScreen({ campaignId }: { campaignId: string }) 
       value: currentCampaign?.onchainProgramId ?? null,
     },
   ].filter((item) => item.value);
+  const transactionStatusTone: Record<string, string> = {
+    pending: "bg-amber-500/10 text-amber-700 ring-1 ring-amber-500/20",
+    confirmed: "bg-emerald-500/10 text-emerald-700 ring-1 ring-emerald-500/20",
+    failed: "bg-destructive/10 text-destructive ring-1 ring-destructive/20",
+  };
+  const transactionKindTone: Record<string, string> = {
+    funding: "bg-sky-500/10 text-sky-700 ring-1 ring-sky-500/20",
+    settlement: "bg-emerald-500/10 text-emerald-700 ring-1 ring-emerald-500/20",
+    settlement_retry: "bg-amber-500/10 text-amber-700 ring-1 ring-amber-500/20",
+    withdrawal: "bg-rose-500/10 text-rose-700 ring-1 ring-rose-500/20",
+    adjustment: "bg-surface text-foreground ring-1 ring-border",
+  };
 
   async function handlePauseConfirm() {
     if (!currentCampaign) {
@@ -432,7 +453,10 @@ export function AppCampaignDetailScreen({ campaignId }: { campaignId: string }) 
         <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
           <KpiCard label={t.kpis.campaign} value={currentCampaign.name} />
           <KpiCard label={t.kpis.status} value={currentCampaign.status} />
-          <KpiCard label={t.kpis.budget} value={formatCurrency(currentCampaign.monthlyBudget, { currency: "USD" })} />
+          <KpiCard
+            label={t.kpis.budget}
+            value={formatCurrency(currentCampaign.remainingBudget, { currency: "USD" })}
+          />
           <KpiCard
             label={t.kpis.maxBid}
             value={formatCurrency(currentCampaign.maxBidPerDecision, {
@@ -444,33 +468,25 @@ export function AppCampaignDetailScreen({ campaignId }: { campaignId: string }) 
         </div>
       </section>
 
-      <section className="mt-5 rounded-2xl border border-border bg-card p-6">
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-              {t.onchain.sectionLabel}
-            </p>
-            <h2 className="mt-2 text-xl font-semibold text-foreground">
-              {currentCampaign.onchainStatus === "funded_onchain" ? t.onchain.active : t.onchain.pending}
-            </h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {currentCampaign.onchainStatus === "funded_onchain"
-                ? t.onchain.activeDescription
-                : replace(t.onchain.pendingDescription, {
-                    amount: formatCurrency(currentCampaign.monthlyBudget, {
-                      currency: "USD",
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    }),
-                  })}
-            </p>
-          </div>
-
-          {currentCampaign.onchainStatus === "funded_onchain" ? (
-            <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-600">
-              {t.onchain.fundingConfirmed}
+      {currentCampaign.onchainStatus !== "funded_onchain" ? (
+        <section className="mt-5 rounded-2xl border border-border bg-card p-6">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div>
+              <p className="text-sm font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                {t.onchain.sectionLabel}
+              </p>
+              <h2 className="mt-2 text-xl font-semibold text-foreground">{t.onchain.pending}</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {replace(t.onchain.pendingDescription, {
+                  amount: formatCurrency(currentCampaign.monthlyBudget, {
+                    currency: "USD",
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  }),
+                })}
+              </p>
             </div>
-          ) : (
+
             <div className="flex flex-col items-stretch gap-2">
               <button
                 type="button"
@@ -485,10 +501,9 @@ export function AppCampaignDetailScreen({ campaignId }: { campaignId: string }) 
                 <p className="max-w-sm text-sm text-amber-700">{activationDisabledReason}</p>
               ) : null}
             </div>
-          )}
-        </div>
+          </div>
 
-        {!balanceLoading && activeWallet && currentCampaign.onchainStatus !== "funded_onchain" && !hasEnoughUsdc ? (
+        {!balanceLoading && activeWallet && !hasEnoughUsdc ? (
           <div className="mt-4 rounded-2xl border border-amber-500/30 bg-amber-500/5 px-4 py-3 text-sm text-amber-700">
             {replace(t.onchain.insufficientHelp, {
               current: formatCurrency(effectiveUsdcBalance ?? 0, {
@@ -504,46 +519,46 @@ export function AppCampaignDetailScreen({ campaignId }: { campaignId: string }) 
             })}
           </div>
         ) : null}
-        {!balanceLoading && activeWallet && currentCampaign.onchainStatus !== "funded_onchain" ? (
+        {!balanceLoading && activeWallet ? (
           <div className="mt-4 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 px-4 py-3 text-sm text-emerald-700">
             {t.onchain.gasSponsoredHelp}
           </div>
         ) : null}
 
-        <div className="mt-4 grid gap-3 md:grid-cols-3">
-          <KpiCard
-            label={messages.app.dashboard.costPerDecision}
-            value={formatCurrency(currentCampaign.maxBidPerDecision, {
-              currency: "USD",
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 4,
-            })}
-          />
-          <KpiCard
-            label={t.onchain.usdcBalance}
-            value={
-              balanceLoading
-                ? t.onchain.loading
-                : formatCurrency(effectiveUsdcBalance ?? 0, {
-                    currency: "USD",
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 4,
-                  })
-            }
-          />
-          <KpiCard
-            label={t.onchain.sponsorWallet}
-            value={
-              activeWallet?.address
-                ? compactAddress(activeWallet.address, t.onchain.notCreated)
-                : currentCampaign.sponsorWallet
-                  ? compactAddress(currentCampaign.sponsorWallet, t.onchain.notCreated)
-                  : t.onchain.privyWalletFallback
-            }
-          />
-        </div>
-
-      </section>
+          <div className="mt-4 grid gap-3 md:grid-cols-3">
+            <KpiCard
+              label={messages.app.dashboard.costPerDecision}
+              value={formatCurrency(currentCampaign.maxBidPerDecision, {
+                currency: "USD",
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 4,
+              })}
+            />
+            <KpiCard
+              label={t.onchain.usdcBalance}
+              value={
+                balanceLoading
+                  ? t.onchain.loading
+                  : formatCurrency(effectiveUsdcBalance ?? 0, {
+                      currency: "USD",
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 4,
+                    })
+              }
+            />
+            <KpiCard
+              label={t.onchain.sponsorWallet}
+              value={
+                activeWallet?.address
+                  ? compactAddress(activeWallet.address, t.onchain.notCreated)
+                  : currentCampaign.sponsorWallet
+                    ? compactAddress(currentCampaign.sponsorWallet, t.onchain.notCreated)
+                    : t.onchain.privyWalletFallback
+              }
+            />
+          </div>
+        </section>
+      ) : null}
 
       <section className="mt-5">
         <Card>
@@ -673,6 +688,134 @@ export function AppCampaignDetailScreen({ campaignId }: { campaignId: string }) 
                 />
               </AreaChart>
             </ChartContainer>
+          </CardContent>
+        </Card>
+      </section>
+
+      <section className="mt-5">
+        <Card>
+          <CardHeader className="min-h-auto border-0 py-6">
+            <div>
+              <CardTitle className="text-lg font-semibold">{t.transactions.title}</CardTitle>
+              <p className="mt-1 text-sm text-muted-foreground">{t.transactions.subtitle}</p>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {transactionsLoading ? (
+              <div className="flex items-center justify-center py-10">
+                <OrbitalLoader message={t.loadingTransactions} />
+              </div>
+            ) : transactions.length === 0 ? (
+              <div className="rounded-2xl border border-dashed border-border bg-background px-5 py-8 text-sm text-muted-foreground">
+                {t.transactions.empty}
+              </div>
+            ) : (
+              <div className="overflow-hidden rounded-2xl border border-border">
+                <div className="hidden grid-cols-[140px_140px_140px_1.2fr_1fr_180px] gap-4 border-b border-border bg-surface/70 px-4 py-3 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground md:grid">
+                  <span>{t.transactions.columns.type}</span>
+                  <span>{t.transactions.columns.status}</span>
+                  <span>{t.transactions.columns.amount}</span>
+                  <span>{t.transactions.columns.tx}</span>
+                  <span>{t.transactions.columns.decision}</span>
+                  <span>{t.transactions.columns.createdAt}</span>
+                </div>
+
+                <div className="divide-y divide-border">
+                  {transactions.map((transaction) => (
+                    <div
+                      key={transaction.id}
+                      className="grid gap-3 px-4 py-4 md:grid-cols-[140px_140px_140px_1.2fr_1fr_180px] md:items-center"
+                    >
+                      <div className="flex flex-col gap-1">
+                        <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground md:hidden">
+                          {t.transactions.columns.type}
+                        </span>
+                        <span
+                          className={`inline-flex w-fit items-center rounded-full px-2.5 py-1 text-xs font-semibold ${transactionKindTone[transaction.kind] ?? "bg-surface text-foreground ring-1 ring-border"}`}
+                        >
+                          {t.transactions.kinds[transaction.kind]}
+                        </span>
+                      </div>
+
+                      <div className="flex flex-col gap-1">
+                        <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground md:hidden">
+                          {t.transactions.columns.status}
+                        </span>
+                        <span
+                          className={`inline-flex w-fit items-center rounded-full px-2.5 py-1 text-xs font-semibold ${transactionStatusTone[transaction.status] ?? "bg-surface text-foreground ring-1 ring-border"}`}
+                        >
+                          {t.transactions.statuses[transaction.status]}
+                        </span>
+                      </div>
+
+                      <div className="flex flex-col gap-1">
+                        <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground md:hidden">
+                          {t.transactions.columns.amount}
+                        </span>
+                        <span className="text-sm font-semibold text-foreground">
+                          {transaction.amountUsdc !== null
+                            ? formatCurrency(transaction.amountUsdc, {
+                                currency: "USD",
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 4,
+                              })
+                            : t.transactions.amountUnavailable}
+                        </span>
+                      </div>
+
+                      <div className="flex flex-col gap-1">
+                        <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground md:hidden">
+                          {t.transactions.columns.tx}
+                        </span>
+                        {transaction.signature ? (
+                          <a
+                            href={explorerTxUrl(transaction.signature)}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-2 text-sm font-medium text-foreground transition-colors hover:text-violet focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                          >
+                            <span className="font-mono">{compactAddress(transaction.signature, t.transactions.txPending)}</span>
+                            <ExternalLink className="size-4 opacity-60" aria-hidden="true" />
+                          </a>
+                        ) : (
+                          <span className="text-sm text-muted-foreground">{t.transactions.txPending}</span>
+                        )}
+                        {transaction.errorMessage ? (
+                          <span className="text-xs text-destructive">
+                            {t.transactions.errorLabel}: {transaction.errorMessage}
+                          </span>
+                        ) : null}
+                      </div>
+
+                      <div className="flex flex-col gap-1">
+                        <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground md:hidden">
+                          {t.transactions.columns.decision}
+                        </span>
+                        <span className="font-mono text-sm text-foreground">
+                          {transaction.decisionId
+                            ? compactAddress(transaction.decisionId, transaction.decisionId)
+                            : t.transactions.decisionUnavailable}
+                        </span>
+                      </div>
+
+                      <div className="flex flex-col gap-1">
+                        <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground md:hidden">
+                          {t.transactions.columns.createdAt}
+                        </span>
+                        <span className="text-sm text-foreground">
+                          {transaction.blockTime
+                            ? formatDate(transaction.blockTime, {
+                                dateStyle: "medium",
+                                timeStyle: "short",
+                              })
+                            : t.transactions.timeUnavailable}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       </section>

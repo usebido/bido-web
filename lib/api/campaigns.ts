@@ -1,5 +1,6 @@
 import {
   type ApiCampaign,
+  type ApiCampaignTransaction,
   type CampaignAnalyticsResponse,
   type CampaignSummaryResponse,
 } from "@/lib/app-campaign-data";
@@ -45,6 +46,12 @@ export const campaignsApi = {
 
   get: (token: GetAccessToken, id: string) =>
     bidoFetch<ApiCampaign>(token, `/campaigns/${id}`),
+
+  transactions: (token: GetAccessToken, id: string, limit = 50) =>
+    bidoFetch<ApiCampaignTransaction[]>(
+      token,
+      `/campaigns/${id}/transactions?limit=${limit}`,
+    ),
 
   summary: (token: GetAccessToken) =>
     bidoFetch<CampaignSummaryResponse>(token, "/campaigns/summary"),

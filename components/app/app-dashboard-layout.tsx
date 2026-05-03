@@ -6,6 +6,7 @@ import { UserPill } from "@privy-io/react-auth/ui";
 import { usePrivy } from "@privy-io/react-auth";
 import { useEffect, useRef, useState } from "react";
 import { BarChart3, Menu, Plus, Target } from "lucide-react";
+import { UsdcBalancePill } from "@/components/app/usdc-balance-pill";
 import { useI18n } from "@/components/providers/i18n-provider";
 import { BrandLogo } from "@/components/site/brand-logo";
 import { cn } from "@/lib/utils";
@@ -126,6 +127,7 @@ export function AppDashboardLayout({ children }: { children: React.ReactNode }) 
           </div>
 
           <div className="flex items-center gap-2">
+            <UsdcBalancePill />
             <div className="rounded-full border border-border bg-surface px-1 py-1 backdrop-blur-xl">
               <UserPill />
             </div>

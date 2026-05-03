@@ -49,6 +49,10 @@ export const app = {
       hour: "h",
       day: "d",
     },
+    usdcBalance: {
+      dropdownTrigger: "Abrir ações do saldo USDC",
+      reload: "Recarregar USDC",
+    },
     fallbackNewCampaign: "Nova campanha",
     campaignData: {
       unexpectedLoadError: "Erro inesperado ao carregar campanhas.",
@@ -119,6 +123,7 @@ export const app = {
     campaignDetail: {
       loadingCampaign: "Carregando campanha...",
       loadingAnalytics: "Carregando analytics...",
+      loadingTransactions: "Carregando transações da campanha...",
       campaignNotFound: "Campanha não encontrada.",
       backToCampaigns: "Todas as campanhas",
       onChainMenu: "On-chain",
@@ -193,6 +198,37 @@ export const app = {
           loserRate: "Loser Rate",
           winRate: "Win Rate",
         },
+      },
+      transactions: {
+        title: "Transações da Campanha",
+        subtitle: "Linha do tempo financeira da campanha com base nas transações reais confirmadas na Solana.",
+        empty: "Ainda não existe nenhuma transação on-chain indexada para esta campanha.",
+        columns: {
+          type: "Tipo",
+          status: "Status",
+          amount: "Valor",
+          tx: "Transação",
+          decision: "Decisão",
+          createdAt: "Criada em",
+        },
+        kinds: {
+          funding: "Funding",
+          settlement: "Settlement",
+          settlement_retry: "Retry",
+          withdrawal: "Withdrawal",
+          adjustment: "Ajuste",
+        },
+        statuses: {
+          pending: "Processando",
+          confirmed: "Confirmada",
+          failed: "Falhou",
+        },
+        txPending: "Aguardando hash",
+        viewOnExplorer: "Ver no Explorer",
+        errorLabel: "Erro de settlement",
+        amountUnavailable: "Valor indisponível",
+        decisionUnavailable: "Sem decisão",
+        timeUnavailable: "Horário indisponível",
       },
     },
     campaignForm: {
@@ -301,6 +337,10 @@ export const app = {
       hour: "h",
       day: "d",
     },
+    usdcBalance: {
+      dropdownTrigger: "Open USDC balance actions",
+      reload: "Reload USDC",
+    },
     fallbackNewCampaign: "New campaign",
     campaignData: {
       unexpectedLoadError: "Unexpected error while loading campaigns.",
@@ -371,6 +411,7 @@ export const app = {
     campaignDetail: {
       loadingCampaign: "Loading campaign...",
       loadingAnalytics: "Loading analytics...",
+      loadingTransactions: "Loading campaign transactions...",
       campaignNotFound: "Campaign not found.",
       backToCampaigns: "All campaigns",
       onChainMenu: "On-chain",
@@ -445,6 +486,37 @@ export const app = {
           loserRate: "Loser Rate",
           winRate: "Win Rate",
         },
+      },
+      transactions: {
+        title: "Campaign Transactions",
+        subtitle: "Financial timeline for this campaign based on real confirmed Solana transactions.",
+        empty: "There are no indexed on-chain transactions for this campaign yet.",
+        columns: {
+          type: "Type",
+          status: "Status",
+          amount: "Amount",
+          tx: "Transaction",
+          decision: "Decision",
+          createdAt: "Created at",
+        },
+        kinds: {
+          funding: "Funding",
+          settlement: "Settlement",
+          settlement_retry: "Retry",
+          withdrawal: "Withdrawal",
+          adjustment: "Adjustment",
+        },
+        statuses: {
+          pending: "Processing",
+          confirmed: "Confirmed",
+          failed: "Failed",
+        },
+        txPending: "Waiting for hash",
+        viewOnExplorer: "View on Explorer",
+        errorLabel: "Settlement error",
+        amountUnavailable: "Amount unavailable",
+        decisionUnavailable: "No decision",
+        timeUnavailable: "Time unavailable",
       },
     },
     campaignForm: {

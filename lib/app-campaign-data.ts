@@ -1,6 +1,38 @@
 export type ApiCampaignStatus = "draft" | "in_review" | "active" | "paused" | "archived";
 export type ApiCampaignObjective = "acquisition" | "monetization";
 export type ApiCampaignOnchainStatus = "not_started" | "funded_onchain";
+export type ApiCampaignSettlementStatus = "pending" | "submitted" | "confirmed" | "failed";
+export type ApiCampaignTransactionKind =
+  | "funding"
+  | "settlement"
+  | "settlement_retry"
+  | "withdrawal"
+  | "adjustment";
+export type ApiCampaignTransactionStatus = "pending" | "confirmed" | "failed";
+
+export type ApiCampaignSettlement = {
+  id: string;
+  decisionId: string;
+  status: ApiCampaignSettlementStatus;
+  amountUsdc: number;
+  txHash: string | null;
+  errorMessage: string | null;
+  confirmedAt: string | null;
+  createdAt: string;
+};
+
+export type ApiCampaignTransaction = {
+  id: string;
+  kind: ApiCampaignTransactionKind;
+  status: ApiCampaignTransactionStatus;
+  signature: string;
+  amountUsdc: number | null;
+  decisionId: string | null;
+  sourceAddress: string | null;
+  destinationAddress: string | null;
+  blockTime: string | null;
+  errorMessage: string | null;
+};
 
 export type ApiCampaign = {
   id: string;
@@ -32,6 +64,7 @@ export type ApiCampaign = {
   createdAt: string;
   updatedAt: string;
   archivedAt: string | null;
+  settlements: ApiCampaignSettlement[];
 };
 
 export type CampaignAnalyticsTopMetrics = {
@@ -75,6 +108,7 @@ export type CampaignRecord = {
   objective: string;
   objectiveCode: ApiCampaignObjective;
   monthlyBudget: number;
+  remainingBudget: number;
   maxBidPerDecision: number;
   spend: number;
   ctr: number;
@@ -99,6 +133,7 @@ export type CampaignRecord = {
   onchainVaultTokenAccount: string | null;
   onchainProgramId: string | null;
   fundedAt: string | null;
+  settlements: ApiCampaignSettlement[];
 };
 
 export type CampaignRecordLabels = {
@@ -115,6 +150,9 @@ export function mapApiCampaignToRecord(
 ): CampaignRecord {
   const series = analytics?.series ?? [];
   const topMetrics = analytics?.topMetrics;
+  const spend = series.reduce((total, point) => total + point.spend, 0);
+  const remainingBudget =
+    campaign.onchainBudgetAvailableUsdc ?? Math.max(campaign.monthlyBudgetUsd - spend, 0);
 
   return {
     id: campaign.id,
@@ -125,8 +163,9 @@ export function mapApiCampaignToRecord(
     objective: labels?.objectiveLabels[campaign.objective] ?? campaign.objective,
     objectiveCode: campaign.objective,
     monthlyBudget: campaign.monthlyBudgetUsd,
+    remainingBudget,
     maxBidPerDecision: campaign.maxBidPerDecisionUsd,
-    spend: series.reduce((total, point) => total + point.spend, 0),
+    spend,
     ctr: 0,
     ctd: topMetrics?.ctd ?? 0,
     costPerDecision: topMetrics?.costPerDecisionUsd ?? 0,
@@ -149,5 +188,6 @@ export function mapApiCampaignToRecord(
     onchainVaultTokenAccount: campaign.onchainVaultTokenAccount,
     onchainProgramId: campaign.onchainProgramId,
     fundedAt: campaign.fundedAt,
+    settlements: campaign.settlements ?? [],
   };
 }

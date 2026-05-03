@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useI18n } from "@/components/providers/i18n-provider";
 import {
   type ApiCampaignStatus,
+  type ApiCampaignTransaction,
   type CampaignRecordLabels,
   type CampaignAnalyticsResponse,
   type CampaignRecord,
@@ -243,6 +244,48 @@ export function useCampaignAnalytics(
   useRefreshListener(reload);
 
   return { analytics, loading, error, reload };
+}
+
+export function useCampaignTransactions(campaignId: string, limit = 50) {
+  const { messages } = useI18n();
+  const { ready, authenticated } = usePrivy();
+  const getToken = useStableToken();
+  const [transactions, setTransactions] = useState<ApiCampaignTransaction[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const reload = useCallback(async () => {
+    if (!ready) return;
+    if (!authenticated) {
+      setTransactions([]);
+      setError(null);
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      setTransactions(await campaignsApi.transactions(getToken, campaignId, limit));
+    } catch (e) {
+      setTransactions([]);
+      setError(toErrorMessage(e, messages.app.campaignData.unexpectedLoadError));
+    } finally {
+      setLoading(false);
+    }
+  }, [ready, authenticated, getToken, campaignId, limit, messages]);
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      void reload();
+    }, 0);
+    return () => window.clearTimeout(timeoutId);
+  }, [reload]);
+
+  useRefreshListener(reload);
+
+  return { transactions, loading, error, reload };
 }
 
 export function useCampaignActions() {
