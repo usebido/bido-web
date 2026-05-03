@@ -8,6 +8,7 @@ import {
   generateCloakKeys,
   getNkFromUtxoPrivateKey,
   importKeys,
+  isRootNotFoundError,
   registerViewingKey,
   transact,
   type CloakKeyPair,
@@ -23,6 +24,7 @@ import {
 const KEYS_STORAGE_PREFIX = "bido:cloak:keys:";
 const REGISTRATION_STORAGE_PREFIX = "bido:cloak:registration:";
 const CAMPAIGN_UTXO_STORAGE_PREFIX = "bido:cloak:campaign-utxos:";
+const CLOAK_RELAY_URL = "https://api.cloak.ag";
 
 type StoredUtxo = {
   amount: string;
@@ -169,6 +171,19 @@ function clearCampaignUtxos(campaignId: string) {
   window.localStorage.removeItem(campaignUtxoStorageKey(campaignId));
 }
 
+function emitProofProgress(
+  onProgress: ((status: string) => void) | undefined,
+  phase: "deposit" | "withdraw",
+  percent: number,
+) {
+  const rounded = Math.max(0, Math.min(100, Math.round(percent)));
+  onProgress?.(
+    phase === "deposit"
+      ? `Generating Cloak deposit proof (${rounded}%)...`
+      : `Generating Cloak withdraw proof (${rounded}%)...`,
+  );
+}
+
 async function getOrCreateKeys(walletAddress: string): Promise<CloakKeyPair> {
   const existing = loadKeys(walletAddress);
   if (existing) {
@@ -223,10 +238,8 @@ export async function runPrivateCampaignFunding(params: {
   vaultUsdcAta: string;
   connection: Connection;
   wallet: CloakWalletBindings;
-  relayUrl?: string;
   onProgress?: (status: string) => void;
 }): Promise<PrivateCampaignFundingResult> {
-  const relayUrl = params.relayUrl ?? "https://api.cloak.ag";
   const usdcMint = new PublicKey(params.usdcMintAddress);
   const vaultUsdcAta = new PublicKey(params.vaultUsdcAta);
   const budgetAtomic = decimalUsdcToAtomic(params.budgetUsdc);
@@ -236,7 +249,7 @@ export async function runPrivateCampaignFunding(params: {
   const nk = getNkFromUtxoPrivateKey(owner.privateKey);
 
   params.onProgress?.("Registering Cloak viewing key...");
-  await ensureViewingKeyRegistered(relayUrl, params.wallet, nk);
+  await ensureViewingKeyRegistered(CLOAK_RELAY_URL, params.wallet, nk);
 
   const storedState = loadCampaignUtxoState(params.campaignId);
   let inputUtxos = storedState.utxos;
@@ -256,7 +269,7 @@ export async function runPrivateCampaignFunding(params: {
       {
         connection: params.connection,
         programId: CLOAK_PROGRAM_ID,
-        relayUrl,
+        relayUrl: CLOAK_RELAY_URL,
         signTransaction: params.wallet.signTransaction,
         signMessage: params.wallet.signMessage,
         depositorPublicKey: params.wallet.publicKey,
@@ -264,6 +277,7 @@ export async function runPrivateCampaignFunding(params: {
         chainNoteViewingKeyNk: nk,
         enforceViewingKeyRegistration: true,
         onProgress: params.onProgress,
+        onProofProgress: (percent) => emitProofProgress(params.onProgress, "deposit", percent),
       },
     );
 
@@ -276,19 +290,36 @@ export async function runPrivateCampaignFunding(params: {
   const vaultBefore = await getVaultAmountAtomic(params.connection, vaultUsdcAta);
 
   params.onProgress?.("Withdrawing privately into the campaign vault...");
-  const withdrawResult = await fullWithdraw(inputUtxos, vaultUsdcAta, {
-    connection: params.connection,
-    programId: CLOAK_PROGRAM_ID,
-    relayUrl,
-    signTransaction: params.wallet.signTransaction,
-    signMessage: params.wallet.signMessage,
-    depositorPublicKey: params.wallet.publicKey,
-    walletPublicKey: params.wallet.publicKey,
-    chainNoteViewingKeyNk: nk,
-    enforceViewingKeyRegistration: true,
-    cachedMerkleTree,
-    onProgress: params.onProgress,
-  });
+  let withdrawResult: Awaited<ReturnType<typeof fullWithdraw>> | undefined;
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
+    try {
+      withdrawResult = await fullWithdraw(inputUtxos, vaultUsdcAta, {
+        connection: params.connection,
+        programId: CLOAK_PROGRAM_ID,
+        relayUrl: CLOAK_RELAY_URL,
+        signTransaction: params.wallet.signTransaction,
+        signMessage: params.wallet.signMessage,
+        depositorPublicKey: params.wallet.publicKey,
+        walletPublicKey: params.wallet.publicKey,
+        chainNoteViewingKeyNk: nk,
+        enforceViewingKeyRegistration: true,
+        cachedMerkleTree,
+        onProgress: params.onProgress,
+        onProofProgress: (percent) => emitProofProgress(params.onProgress, "withdraw", percent),
+      });
+      break;
+    } catch (error) {
+      if (!isRootNotFoundError(error) || attempt === 3) {
+        throw error;
+      }
+      params.onProgress?.("Cloak root stale, retrying withdraw...");
+      await new Promise((resolve) => window.setTimeout(resolve, 1_500));
+    }
+  }
+
+  if (!withdrawResult) {
+    throw new Error("Cloak withdraw did not produce a result");
+  }
 
   const withdrawAmountAtomic = await waitForVaultDelta(
     params.connection,

@@ -1,4 +1,4 @@
-const API_BASE =
+export const API_BASE =
   process.env.NEXT_PUBLIC_BIDO_API_BASE ?? "http://localhost:3001/api";
 
 export class BidoApiError extends Error {
