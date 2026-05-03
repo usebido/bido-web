@@ -1,5 +1,6 @@
 export type CampaignObjective = "traffic" | "lead_generation" | "awareness";
 export type DeviceTarget = "all" | "custom";
+export type CampaignPrivacyMode = "public_direct" | "private_cloak";
 
 export interface CampaignFormData {
   brandName: string;
@@ -9,6 +10,7 @@ export interface CampaignFormData {
   intentCategory: string;
   totalBudget: number;
   queryBid: number;
+  privacyMode: CampaignPrivacyMode;
 }
 
 export const INITIAL_FORM: CampaignFormData = {
@@ -19,4 +21,5 @@ export const INITIAL_FORM: CampaignFormData = {
   intentCategory: "",
   totalBudget: 1000,
   queryBid: 0.5,
+  privacyMode: "private_cloak",
 };

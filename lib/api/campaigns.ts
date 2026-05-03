@@ -40,6 +40,22 @@ export type PrepareFundingResponse = {
   programId: string;
 };
 
+export type PreparePrivateFinalizationResponse = {
+  txBase64: string;
+  recentBlockhash: string;
+  lastValidBlockHeight: number;
+  sponsorWallet: string;
+  feePayer: string;
+  submissionMode: "direct" | "kora";
+  koraSignerAddress?: string;
+  campaignPda: string;
+  vaultUsdcAta: string;
+  usdcMint: string;
+  programId: string;
+  accountedVaultBalanceAtomic: string;
+  budgetSpentAtomic: string;
+};
+
 export const campaignsApi = {
   list: (token: GetAccessToken) =>
     bidoFetch<ApiCampaign[]>(token, "/campaigns"),
@@ -111,6 +127,33 @@ export const campaignsApi = {
       },
     ),
 
+  setupPrivacy: (
+    token: GetAccessToken,
+    id: string,
+    payload: { viewingKeyRegistered?: boolean; viewingKeyReference?: string } = {},
+  ) =>
+    bidoFetch<ApiCampaign>(token, `/campaigns/${id}/privacy/setup`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+
+  confirmPrivacyDeposit: (token: GetAccessToken, id: string, txHash: string) =>
+    bidoFetch<ApiCampaign>(token, `/campaigns/${id}/privacy/deposit/confirm`, {
+      method: "POST",
+      body: JSON.stringify({ txHash }),
+    }),
+
+  confirmPrivacyWithdraw: (
+    token: GetAccessToken,
+    id: string,
+    txHash: string,
+    withdrawAmountAtomic: string,
+  ) =>
+    bidoFetch<ApiCampaign>(token, `/campaigns/${id}/privacy/withdraw/confirm`, {
+      method: "POST",
+      body: JSON.stringify({ txHash, withdrawAmountAtomic }),
+    }),
+
   prepareFunding: (token: GetAccessToken, id: string, feePayer?: string) =>
     bidoFetch<PrepareFundingResponse>(
       token,
@@ -138,6 +181,22 @@ export const campaignsApi = {
 
   confirmFunding: (token: GetAccessToken, id: string, txHash: string) =>
     bidoFetch<ApiCampaign>(token, `/campaigns/${id}/onchain/confirm`, {
+      method: "POST",
+      body: JSON.stringify({ txHash }),
+    }),
+
+  preparePrivateFinalization: (token: GetAccessToken, id: string, feePayer?: string) =>
+    bidoFetch<PreparePrivateFinalizationResponse>(
+      token,
+      `/campaigns/${id}/onchain/private-finalize/prepare`,
+      {
+        method: "POST",
+        body: JSON.stringify(feePayer ? { feePayer } : {}),
+      },
+    ),
+
+  confirmPrivateFinalization: (token: GetAccessToken, id: string, txHash: string) =>
+    bidoFetch<ApiCampaign>(token, `/campaigns/${id}/onchain/private-finalize/confirm`, {
       method: "POST",
       body: JSON.stringify({ txHash }),
     }),

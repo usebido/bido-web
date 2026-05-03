@@ -11,6 +11,7 @@
   "dependencies": {
     "@base-ui/react": "^1.4.1",
     "@calcom/embed-react": "^1.5.3",
+    "@cloak.dev/sdk": "^0.1.6",
     "@privy-io/react-auth": "^3.22.1",
     "@radix-ui/react-accordion": "^1.2.12",
     "@radix-ui/react-dropdown-menu": "^2.1.16",

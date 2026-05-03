@@ -1,9 +1,23 @@
 export type ApiCampaignStatus = "draft" | "in_review" | "active" | "paused" | "archived";
 export type ApiCampaignObjective = "acquisition" | "monetization";
 export type ApiCampaignOnchainStatus = "not_started" | "funded_onchain";
+export type ApiCampaignPrivacyMode = "public_direct" | "private_cloak";
+export type ApiCampaignPrivacyFundingStatus =
+  | "not_started"
+  | "setup_pending"
+  | "deposit_pending"
+  | "deposit_confirmed"
+  | "withdraw_pending"
+  | "withdraw_confirmed"
+  | "finalization_pending"
+  | "funded"
+  | "failed";
 export type ApiCampaignSettlementStatus = "pending" | "submitted" | "confirmed" | "failed";
 export type ApiCampaignTransactionKind =
   | "funding"
+  | "privacy_deposit"
+  | "privacy_withdrawal"
+  | "privacy_finalization"
   | "settlement"
   | "settlement_retry"
   | "withdrawal"
@@ -48,6 +62,9 @@ export type ApiCampaign = {
   monthlyBudgetUsd: number;
   maxBidPerDecisionUsd: number;
   onchainStatus: ApiCampaignOnchainStatus;
+  privacyMode: ApiCampaignPrivacyMode;
+  privacyFundingStatus: ApiCampaignPrivacyFundingStatus;
+  cloakEnabled: boolean;
   sponsorWallet: string | null;
   onchainTxHash: string | null;
   onchainProgramId: string | null;
@@ -56,9 +73,15 @@ export type ApiCampaign = {
   onchainBudgetTotalAtomic: string | null;
   onchainBudgetAvailableAtomic: string | null;
   onchainBudgetSpentAtomic: string | null;
+  onchainAccountedVaultBalanceAtomic: string | null;
   onchainBudgetTotalUsdc: number | null;
   onchainBudgetAvailableUsdc: number | null;
   onchainBudgetSpentUsdc: number | null;
+  onchainAccountedVaultBalanceUsdc: number | null;
+  cloakDepositTxHash: string | null;
+  cloakWithdrawTxHash: string | null;
+  cloakViewingKeyRegisteredAt: string | null;
+  cloakLastError: string | null;
   fundedAt: string | null;
   audienceDescription: string | null;
   createdAt: string;
@@ -129,9 +152,18 @@ export type CampaignRecord = {
   summary: string;
   sponsorWallet: string | null;
   onchainStatus: ApiCampaignOnchainStatus;
+  privacyMode: ApiCampaignPrivacyMode;
+  privacyFundingStatus: ApiCampaignPrivacyFundingStatus;
+  cloakEnabled: boolean;
   onchainCampaignPda: string | null;
   onchainVaultTokenAccount: string | null;
   onchainProgramId: string | null;
+  onchainBudgetAvailableUsdc: number | null;
+  onchainAccountedVaultBalanceUsdc: number | null;
+  cloakDepositTxHash: string | null;
+  cloakWithdrawTxHash: string | null;
+  cloakViewingKeyRegisteredAt: string | null;
+  cloakLastError: string | null;
   fundedAt: string | null;
   settlements: ApiCampaignSettlement[];
 };
@@ -184,9 +216,18 @@ export function mapApiCampaignToRecord(
     summary: campaign.summary,
     sponsorWallet: campaign.sponsorWallet,
     onchainStatus: campaign.onchainStatus,
+    privacyMode: campaign.privacyMode,
+    privacyFundingStatus: campaign.privacyFundingStatus,
+    cloakEnabled: campaign.cloakEnabled,
     onchainCampaignPda: campaign.onchainCampaignPda,
     onchainVaultTokenAccount: campaign.onchainVaultTokenAccount,
     onchainProgramId: campaign.onchainProgramId,
+    onchainBudgetAvailableUsdc: campaign.onchainBudgetAvailableUsdc,
+    onchainAccountedVaultBalanceUsdc: campaign.onchainAccountedVaultBalanceUsdc,
+    cloakDepositTxHash: campaign.cloakDepositTxHash,
+    cloakWithdrawTxHash: campaign.cloakWithdrawTxHash,
+    cloakViewingKeyRegisteredAt: campaign.cloakViewingKeyRegisteredAt,
+    cloakLastError: campaign.cloakLastError,
     fundedAt: campaign.fundedAt,
     settlements: campaign.settlements ?? [],
   };

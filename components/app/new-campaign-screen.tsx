@@ -11,6 +11,7 @@ import { AdPreview } from "@/components/campaign/ad-preview";
 import { INITIAL_FORM, type CampaignFormData } from "@/lib/campaign-types";
 import { useCampaignActions } from "@/lib/hooks/use-campaigns";
 import { useI18n } from "@/components/providers/i18n-provider";
+import { cn } from "@/lib/utils";
 
 export function NewCampaignScreen({
   mode = "create",
@@ -78,6 +79,57 @@ export function NewCampaignScreen({
           <AdInfoSection form={form} onChange={handleChange} />
           <TargetingSection form={form} onChange={handleChange} />
           <BudgetSection form={form} onChange={handleChange} />
+          <section className="rounded-3xl border border-border bg-card p-5 shadow-sm">
+            <div className="flex flex-col gap-1">
+              <p className="text-sm font-semibold text-foreground">Funding architecture</p>
+              <p className="text-sm text-muted-foreground">
+                Choose whether this campaign will use direct public funding or the private Cloak flow.
+              </p>
+            </div>
+
+            <div className="mt-4 grid gap-3 md:grid-cols-2">
+              {[
+                {
+                  mode: "private_cloak" as const,
+                  title: "Private with Cloak",
+                  description:
+                    "Shield deposit and withdraw into the campaign vault, then finalize budget accounting on-chain.",
+                },
+                {
+                  mode: "public_direct" as const,
+                  title: "Public direct",
+                  description:
+                    "Transfer USDC publicly from the sponsor wallet into the campaign vault during activation.",
+                },
+              ].map((option) => {
+                const selected = form.privacyMode === option.mode;
+                return (
+                  <button
+                    key={option.mode}
+                    type="button"
+                    onClick={() => handleChange({ privacyMode: option.mode })}
+                    className={cn(
+                      "rounded-2xl border px-4 py-4 text-left transition-colors",
+                      selected
+                        ? "border-violet bg-violet/5 shadow-sm"
+                        : "border-border bg-background hover:border-violet/40 hover:bg-accent/30",
+                    )}
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-sm font-semibold text-foreground">{option.title}</span>
+                      <span
+                        className={cn(
+                          "size-3 rounded-full border",
+                          selected ? "border-violet bg-violet" : "border-muted-foreground/40",
+                        )}
+                      />
+                    </div>
+                    <p className="mt-2 text-sm text-muted-foreground">{option.description}</p>
+                  </button>
+                );
+              })}
+            </div>
+          </section>
 
           {submitError ? (
             <div className="rounded-2xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">

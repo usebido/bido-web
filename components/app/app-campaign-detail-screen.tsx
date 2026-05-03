@@ -7,7 +7,12 @@ import { ArrowLeft, ChevronDown, ExternalLink, Pencil, Pause, Rocket, Trash2, Tr
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import { useWallets } from "@privy-io/react-auth/solana";
 import { getAssociatedTokenAddressSync } from "@solana/spl-token";
-import { Connection, PublicKey } from "@solana/web3.js";
+import {
+  Connection,
+  PublicKey,
+  Transaction,
+  VersionedTransaction,
+} from "@solana/web3.js";
 import bs58 from "bs58";
 import {
   ChartContainer,
@@ -23,6 +28,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ShimmerBlock } from "@/components/ui/animated-loading-skeleton";
 import { OrbitalLoader } from "@/components/ui/orbital-loader";
 import { useI18n } from "@/components/providers/i18n-provider";
+import { runPrivateCampaignFunding } from "@/lib/cloak-flow";
 import { useCampaign, useCampaignActions, useCampaignAnalytics, useCampaignTransactions } from "@/lib/hooks/use-campaigns";
 
 function KpiCard({
@@ -91,6 +97,11 @@ export function AppCampaignDetailScreen({ campaignId }: { campaignId: string }) 
     prepareCampaignFunding,
     relayCampaignFunding,
     confirmCampaignFunding,
+    setupCampaignPrivacy,
+    confirmPrivacyDeposit,
+    confirmPrivacyWithdraw,
+    preparePrivateFinalization,
+    confirmPrivateFinalization,
     solanaChain,
   } = useCampaignActions();
   const [selectedPeriod, setSelectedPeriod] = useState<PeriodKey>("30d");
@@ -197,6 +208,7 @@ export function AppCampaignDetailScreen({ campaignId }: { campaignId: string }) 
   }, [activeWallet?.address, balanceFetchFailedLabel, walletsReady]);
 
   const requiredUsdc = currentCampaign?.monthlyBudget ?? 0;
+  const isPrivateCampaign = currentCampaign?.privacyMode === "private_cloak";
   const effectiveUsdcBalance = activeWallet ? usdcBalance : null;
   const hasEnoughUsdc = effectiveUsdcBalance !== null && effectiveUsdcBalance >= requiredUsdc;
   const activationDisabledReason = !walletsReady
@@ -237,11 +249,15 @@ export function AppCampaignDetailScreen({ campaignId }: { campaignId: string }) 
   };
   const transactionKindTone: Record<string, string> = {
     funding: "bg-sky-500/10 text-sky-700 ring-1 ring-sky-500/20",
+    privacy_deposit: "bg-indigo-500/10 text-indigo-700 ring-1 ring-indigo-500/20",
+    privacy_withdrawal: "bg-cyan-500/10 text-cyan-700 ring-1 ring-cyan-500/20",
+    privacy_finalization: "bg-violet-500/10 text-violet-700 ring-1 ring-violet-500/20",
     settlement: "bg-emerald-500/10 text-emerald-700 ring-1 ring-emerald-500/20",
     settlement_retry: "bg-amber-500/10 text-amber-700 ring-1 ring-amber-500/20",
     withdrawal: "bg-rose-500/10 text-rose-700 ring-1 ring-rose-500/20",
     adjustment: "bg-surface text-foreground ring-1 ring-border",
   };
+  const transactionKindLabels = t.transactions.kinds as Record<string, string>;
 
   async function handlePauseConfirm() {
     if (!currentCampaign) {
@@ -274,7 +290,8 @@ export function AppCampaignDetailScreen({ campaignId }: { campaignId: string }) 
       let txHash: string;
       const runPreparedTransaction = async (prepared:
         | Awaited<ReturnType<typeof prepareCampaignInitialization>>
-        | Awaited<ReturnType<typeof prepareCampaignFunding>>,
+        | Awaited<ReturnType<typeof prepareCampaignFunding>>
+        | Awaited<ReturnType<typeof preparePrivateFinalization>>
       ) => {
         const sponsorWallet = wallets.find((wallet) => wallet.address === prepared.sponsorWallet);
 
@@ -312,9 +329,76 @@ export function AppCampaignDetailScreen({ campaignId }: { campaignId: string }) 
         await confirmCampaignInitialization(currentCampaign.id, txHash);
       }
 
-      const prepared = await prepareCampaignFunding(currentCampaign.id);
-      txHash = await runPreparedTransaction(prepared);
-      await confirmCampaignFunding(currentCampaign.id, txHash);
+      if (currentCampaign.privacyMode === "private_cloak") {
+        if (!activeWallet?.signTransaction || !activeWallet.signMessage) {
+          throw new Error("The connected wallet must support transaction and message signing for Cloak");
+        }
+        if (!currentCampaign.onchainVaultTokenAccount) {
+          throw new Error("Campaign vault account is missing after initialization");
+        }
+
+        const rpcUrl = process.env.NEXT_PUBLIC_SOLANA_RPC_URL ?? DEFAULT_SOLANA_RPC_URL;
+        const usdcMintAddress =
+          process.env.NEXT_PUBLIC_SOLANA_USDC_MINT ?? DEFAULT_DEVNET_USDC_MINT;
+        const connection = new Connection(rpcUrl, "confirmed");
+        const walletPublicKey = new PublicKey(activeWallet.address);
+
+        const cloakResult = await runPrivateCampaignFunding({
+          campaignId: currentCampaign.id,
+          budgetUsdc: currentCampaign.monthlyBudget,
+          usdcMintAddress,
+          vaultUsdcAta: currentCampaign.onchainVaultTokenAccount,
+          connection,
+          wallet: {
+            address: activeWallet.address,
+            publicKey: walletPublicKey,
+            signMessage: async (message) => {
+              const result = await activeWallet.signMessage({ message });
+              return result.signature;
+            },
+            signTransaction: async (transaction) => {
+              const serialized =
+                transaction instanceof Transaction
+                  ? transaction.serialize({
+                      verifySignatures: false,
+                      requireAllSignatures: false,
+                    })
+                  : transaction.serialize();
+
+              const signed = await activeWallet.signTransaction({
+                transaction: serialized,
+                chain: solanaChain,
+              });
+
+              return (transaction instanceof VersionedTransaction
+                ? VersionedTransaction.deserialize(signed.signedTransaction)
+                : Transaction.from(signed.signedTransaction)) as typeof transaction;
+            },
+          },
+        });
+
+        await setupCampaignPrivacy(currentCampaign.id, {
+          viewingKeyRegistered: true,
+          viewingKeyReference: cloakResult.viewingKeyReference,
+        });
+
+        if (cloakResult.depositSignature) {
+          await confirmPrivacyDeposit(currentCampaign.id, cloakResult.depositSignature);
+        }
+        await confirmPrivacyWithdraw(
+          currentCampaign.id,
+          cloakResult.withdrawSignature,
+          cloakResult.withdrawAmountAtomic,
+        );
+
+        const prepared = await preparePrivateFinalization(currentCampaign.id);
+        txHash = await runPreparedTransaction(prepared);
+        await confirmPrivateFinalization(currentCampaign.id, txHash);
+      } else {
+        const prepared = await prepareCampaignFunding(currentCampaign.id);
+        txHash = await runPreparedTransaction(prepared);
+        await confirmCampaignFunding(currentCampaign.id, txHash);
+      }
     } catch (currentError) {
       setFundingError(currentError instanceof Error ? currentError.message : t.onchain.activationFailed);
     } finally {
@@ -454,6 +538,10 @@ export function AppCampaignDetailScreen({ campaignId }: { campaignId: string }) 
           <KpiCard label={t.kpis.campaign} value={currentCampaign.name} />
           <KpiCard label={t.kpis.status} value={currentCampaign.status} />
           <KpiCard
+            label="Funding mode"
+            value={currentCampaign.privacyMode === "private_cloak" ? "Private Cloak" : "Public direct"}
+          />
+          <KpiCard
             label={t.kpis.budget}
             value={formatCurrency(currentCampaign.remainingBudget, { currency: "USD" })}
           />
@@ -477,13 +565,22 @@ export function AppCampaignDetailScreen({ campaignId }: { campaignId: string }) 
               </p>
               <h2 className="mt-2 text-xl font-semibold text-foreground">{t.onchain.pending}</h2>
               <p className="mt-1 text-sm text-muted-foreground">
-                {replace(t.onchain.pendingDescription, {
-                  amount: formatCurrency(currentCampaign.monthlyBudget, {
-                    currency: "USD",
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  }),
-                })}
+                {isPrivateCampaign
+                  ? `This campaign uses the Cloak private funding flow. Initialize the vault, confirm the shield deposit and private withdraw, then finalize the budget on-chain for ${formatCurrency(
+                      currentCampaign.monthlyBudget,
+                      {
+                        currency: "USD",
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      },
+                    )}.`
+                  : replace(t.onchain.pendingDescription, {
+                      amount: formatCurrency(currentCampaign.monthlyBudget, {
+                        currency: "USD",
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      }),
+                    })}
               </p>
             </div>
 
@@ -556,7 +653,44 @@ export function AppCampaignDetailScreen({ campaignId }: { campaignId: string }) 
                     : t.onchain.privyWalletFallback
               }
             />
+            <KpiCard
+              label="Privacy status"
+              value={currentCampaign.privacyFundingStatus.replaceAll("_", " ")}
+            />
           </div>
+
+          {isPrivateCampaign ? (
+            <div className="mt-4 rounded-2xl border border-sky-500/30 bg-sky-500/5 px-4 py-3 text-sm text-sky-800">
+              <p>
+                Cloak runs non-custodially in the frontend. The app registers the viewing key,
+                shields the sponsor USDC with the official SDK, withdraws privately into the
+                campaign vault, and only then finalizes the budget accounting on the Bido program.
+              </p>
+              {currentCampaign.cloakViewingKeyRegisteredAt ? (
+                <p className="mt-2">
+                  Viewing key registered at{" "}
+                  {formatDate(currentCampaign.cloakViewingKeyRegisteredAt, {
+                    dateStyle: "medium",
+                    timeStyle: "short",
+                  })}
+                  .
+                </p>
+              ) : null}
+              {currentCampaign.cloakWithdrawTxHash ? (
+                <p className="mt-2">
+                  Last withdraw:{" "}
+                  <a
+                    href={explorerTxUrl(currentCampaign.cloakWithdrawTxHash)}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="font-medium underline underline-offset-4"
+                  >
+                    {compactAddress(currentCampaign.cloakWithdrawTxHash, currentCampaign.cloakWithdrawTxHash)}
+                  </a>
+                </p>
+              ) : null}
+            </div>
+          ) : null}
         </section>
       ) : null}
 
@@ -733,7 +867,8 @@ export function AppCampaignDetailScreen({ campaignId }: { campaignId: string }) 
                         <span
                           className={`inline-flex w-fit items-center rounded-full px-2.5 py-1 text-xs font-semibold ${transactionKindTone[transaction.kind] ?? "bg-surface text-foreground ring-1 ring-border"}`}
                         >
-                          {t.transactions.kinds[transaction.kind]}
+                          {transactionKindLabels[transaction.kind] ??
+                            transaction.kind.replaceAll("_", " ")}
                         </span>
                       </div>
 
