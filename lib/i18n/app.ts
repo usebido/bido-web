@@ -69,11 +69,9 @@ export const app = {
         monetization: "Monetização",
       },
       intentLabels: {
-        viagens: "Viagens",
+        travel: "Viagens",
+        health: "Saúde",
         ecommerce: "E-commerce",
-        saas: "SaaS",
-        financas: "Finanças",
-        educacao: "Educação",
       },
     },
 
@@ -261,13 +259,11 @@ export const app = {
         description: "Escolha em quais intenções sua campanha pode participar.",
         categoryLabel: "Categoria de Intenção",
         categoryPlaceholder: "Selecionar categoria",
-        categoryHelp: "Ex: Viagens, E-commerce, SaaS, Finanças, Educação",
+        categoryHelp: "Ex: Viagens, Saúde, E-commerce",
         categories: {
-          viagens: "Viagens",
+          travel: "Viagens",
+          health: "Saúde",
           ecommerce: "E-commerce",
-          saas: "SaaS",
-          financas: "Finanças",
-          educacao: "Educação",
         },
       },
       budget: {
@@ -361,11 +357,9 @@ export const app = {
         monetization: "Monetization",
       },
       intentLabels: {
-        viagens: "Travel",
+        travel: "Travel",
+        health: "Health",
         ecommerce: "E-commerce",
-        saas: "SaaS",
-        financas: "Finance",
-        educacao: "Education",
       },
     },
 
@@ -553,13 +547,11 @@ export const app = {
         description: "Choose which intents your campaign can participate in.",
         categoryLabel: "Intent Category",
         categoryPlaceholder: "Select category",
-        categoryHelp: "E.g.: Travel, E-commerce, SaaS, Finance, Education",
+        categoryHelp: "E.g.: Travel, Health, E-commerce",
         categories: {
-          viagens: "Travel",
+          travel: "Travel",
+          health: "Health",
           ecommerce: "E-commerce",
-          saas: "SaaS",
-          financas: "Finance",
-          educacao: "Education",
         },
       },
       budget: {

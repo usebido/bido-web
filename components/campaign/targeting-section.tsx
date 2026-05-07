@@ -24,11 +24,9 @@ export function TargetingSection({ form, onChange }: TargetingSectionProps) {
             <SelectValue placeholder={t.categoryPlaceholder} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="viagens">{t.categories.viagens}</SelectItem>
+            <SelectItem value="travel">{t.categories.travel}</SelectItem>
+            <SelectItem value="health">{t.categories.health}</SelectItem>
             <SelectItem value="ecommerce">{t.categories.ecommerce}</SelectItem>
-            <SelectItem value="saas">{t.categories.saas}</SelectItem>
-            <SelectItem value="financas">{t.categories.financas}</SelectItem>
-            <SelectItem value="educacao">{t.categories.educacao}</SelectItem>
           </SelectContent>
         </Select>
         <p className="mt-2 text-sm text-muted-foreground">{t.categoryHelp}</p>
