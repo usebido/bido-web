@@ -5,7 +5,8 @@ import { usePathname } from "next/navigation";
 import { UserPill } from "@privy-io/react-auth/ui";
 import { usePrivy } from "@privy-io/react-auth";
 import { useEffect, useRef, useState } from "react";
-import { BarChart3, Menu, Plus, Target } from "lucide-react";
+import { BarChart3, Menu, Moon, Plus, Sun, Target } from "lucide-react";
+import { useTheme } from "next-themes";
 import { UsdcBalancePill } from "@/components/app/usdc-balance-pill";
 import { useI18n } from "@/components/providers/i18n-provider";
 import { BrandLogo } from "@/components/site/brand-logo";
@@ -14,10 +15,12 @@ import { cn } from "@/lib/utils";
 export function AppDashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { ready, authenticated, login } = usePrivy();
-  const { messages } = useI18n();
+  const { locale, setLocale, localeLabels, messages } = useI18n();
+  const { theme, setTheme } = useTheme();
   const loginEnabled = process.env.NEXT_PUBLIC_LOGIN_ENABLED === "true";
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -26,6 +29,10 @@ export function AppDashboardLayout({ children }: { children: React.ReactNode }) 
         clearTimeout(closeTimeoutRef.current);
       }
     };
+  }, []);
+
+  useEffect(() => {
+    setMounted(true);
   }, []);
 
   if (!ready) {
@@ -212,6 +219,67 @@ export function AppDashboardLayout({ children }: { children: React.ReactNode }) 
                     </Link>
                   );
                 })}
+              </div>
+            </div>
+
+            <div className="border-t border-white/6 px-4 py-4">
+              <div className="space-y-4">
+                <div>
+                  <div className="mb-2 px-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                    {messages.common.language}
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    {(Object.entries(localeLabels) as Array<[keyof typeof localeLabels, string]>).map(([value, label]) => (
+                      <button
+                        key={value}
+                        type="button"
+                        onClick={() => setLocale(value)}
+                        className={cn(
+                          "rounded-2xl border px-3 py-2 text-sm font-medium transition-colors",
+                          locale === value
+                            ? "border-violet/30 bg-violet/12 text-foreground"
+                            : "border-border bg-background/40 text-muted-foreground hover:text-foreground",
+                        )}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <div className="mb-2 px-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                    {messages.common.theme}
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setTheme("light")}
+                      className={cn(
+                        "inline-flex items-center justify-center gap-2 rounded-2xl border px-3 py-2 text-sm font-medium transition-colors",
+                        mounted && theme === "light"
+                          ? "border-violet/30 bg-violet/12 text-foreground"
+                          : "border-border bg-background/40 text-muted-foreground hover:text-foreground",
+                      )}
+                    >
+                      <Sun className="size-4" />
+                      {messages.common.light}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setTheme("dark")}
+                      className={cn(
+                        "inline-flex items-center justify-center gap-2 rounded-2xl border px-3 py-2 text-sm font-medium transition-colors",
+                        mounted && theme === "dark"
+                          ? "border-violet/30 bg-violet/12 text-foreground"
+                          : "border-border bg-background/40 text-muted-foreground hover:text-foreground",
+                      )}
+                    >
+                      <Moon className="size-4" />
+                      {messages.common.dark}
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

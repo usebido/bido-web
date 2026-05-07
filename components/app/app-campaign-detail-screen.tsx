@@ -28,6 +28,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ShimmerBlock } from "@/components/ui/animated-loading-skeleton";
 import { OrbitalLoader } from "@/components/ui/orbital-loader";
 import { useI18n } from "@/components/providers/i18n-provider";
+import { getDefaultUsdcMintAddress, getSolanaNetwork } from "@/lib/cloak-config";
 import { runPrivateCampaignFunding } from "@/lib/cloak-flow";
 import { useCampaign, useCampaignActions, useCampaignAnalytics, useCampaignTransactions } from "@/lib/hooks/use-campaigns";
 
@@ -49,7 +50,6 @@ function KpiCard({
 type PeriodKey = "7d" | "30d" | "90d";
 
 const DEFAULT_SOLANA_RPC_URL = "https://api.devnet.solana.com";
-const DEFAULT_DEVNET_USDC_MINT = "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU";
 
 function decodeBase64ToBytes(value: string) {
   const decoded = window.atob(value);
@@ -73,12 +73,12 @@ function compactAddress(value: string | null, fallback: string) {
 }
 
 function explorerUrl(address: string) {
-  const cluster = process.env.NEXT_PUBLIC_SOLANA_NETWORK ?? "devnet";
+  const cluster = getSolanaNetwork();
   return `https://explorer.solana.com/address/${address}?cluster=${cluster}`;
 }
 
 function explorerTxUrl(signature: string) {
-  const cluster = process.env.NEXT_PUBLIC_SOLANA_NETWORK ?? "devnet";
+  const cluster = getSolanaNetwork();
   return `https://explorer.solana.com/tx/${signature}?cluster=${cluster}`;
 }
 
@@ -174,7 +174,8 @@ export function AppCampaignDetailScreen({ campaignId }: { campaignId: string }) 
 
       try {
         const rpcUrl = process.env.NEXT_PUBLIC_SOLANA_RPC_URL ?? DEFAULT_SOLANA_RPC_URL;
-        const usdcMintAddress = process.env.NEXT_PUBLIC_SOLANA_USDC_MINT ?? DEFAULT_DEVNET_USDC_MINT;
+        const usdcMintAddress =
+          process.env.NEXT_PUBLIC_SOLANA_USDC_MINT ?? getDefaultUsdcMintAddress();
         const connection = new Connection(rpcUrl, "confirmed");
         const owner = new PublicKey(activeWallet.address);
         const mint = new PublicKey(usdcMintAddress);
@@ -288,6 +289,7 @@ export function AppCampaignDetailScreen({ campaignId }: { campaignId: string }) 
 
     try {
       let txHash: string;
+      let resolvedVaultUsdcAta = currentCampaign.onchainVaultTokenAccount;
       const runPreparedTransaction = async (prepared:
         | Awaited<ReturnType<typeof prepareCampaignInitialization>>
         | Awaited<ReturnType<typeof prepareCampaignFunding>>
@@ -326,20 +328,22 @@ export function AppCampaignDetailScreen({ campaignId }: { campaignId: string }) 
       if (needsInitialization) {
         const initialization = await prepareCampaignInitialization(currentCampaign.id);
         txHash = await runPreparedTransaction(initialization);
-        await confirmCampaignInitialization(currentCampaign.id, txHash);
+        const confirmedInitialization = await confirmCampaignInitialization(currentCampaign.id, txHash);
+        resolvedVaultUsdcAta =
+          confirmedInitialization.onchainVaultTokenAccount ?? initialization.vaultUsdcAta;
       }
 
       if (currentCampaign.privacyMode === "private_cloak") {
         if (!activeWallet?.signTransaction || !activeWallet.signMessage) {
           throw new Error("The connected wallet must support transaction and message signing for Cloak");
         }
-        if (!currentCampaign.onchainVaultTokenAccount) {
+        if (!resolvedVaultUsdcAta) {
           throw new Error("Campaign vault account is missing after initialization");
         }
 
         const rpcUrl = process.env.NEXT_PUBLIC_SOLANA_RPC_URL ?? DEFAULT_SOLANA_RPC_URL;
         const usdcMintAddress =
-          process.env.NEXT_PUBLIC_SOLANA_USDC_MINT ?? DEFAULT_DEVNET_USDC_MINT;
+          process.env.NEXT_PUBLIC_SOLANA_USDC_MINT ?? getDefaultUsdcMintAddress();
         const connection = new Connection(rpcUrl, "confirmed");
         const walletPublicKey = new PublicKey(activeWallet.address);
 
@@ -347,7 +351,7 @@ export function AppCampaignDetailScreen({ campaignId }: { campaignId: string }) 
           campaignId: currentCampaign.id,
           budgetUsdc: currentCampaign.monthlyBudget,
           usdcMintAddress,
-          vaultUsdcAta: currentCampaign.onchainVaultTokenAccount,
+          vaultUsdcAta: resolvedVaultUsdcAta,
           connection,
           wallet: {
             address: activeWallet.address,
@@ -418,6 +422,8 @@ export function AppCampaignDetailScreen({ campaignId }: { campaignId: string }) 
     );
   }
 
+  const fundingModeLabel = t.fundingModes[currentCampaign.privacyMode];
+
   return (
     <>
       <ConfirmDialog
@@ -443,7 +449,12 @@ export function AppCampaignDetailScreen({ campaignId }: { campaignId: string }) 
       />
 
       <header className="mb-5">
-        <h1 className="text-2xl font-bold tracking-tight text-foreground text-balance">{currentCampaign.name}</h1>
+        <div className="flex flex-wrap items-center gap-3">
+          <h1 className="text-2xl font-bold tracking-tight text-foreground text-balance">{currentCampaign.name}</h1>
+          <span className="inline-flex items-center rounded-full border border-violet/20 bg-violet/10 px-3 py-1 text-xs font-medium text-violet">
+            {fundingModeLabel}
+          </span>
+        </div>
         <p className="mt-0.5 text-sm text-muted-foreground">{currentCampaign.summary}</p>
       </header>
 
@@ -537,10 +548,6 @@ export function AppCampaignDetailScreen({ campaignId }: { campaignId: string }) 
         <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
           <KpiCard label={t.kpis.campaign} value={currentCampaign.name} />
           <KpiCard label={t.kpis.status} value={currentCampaign.status} />
-          <KpiCard
-            label="Funding mode"
-            value={currentCampaign.privacyMode === "private_cloak" ? "Private Cloak" : "Public direct"}
-          />
           <KpiCard
             label={t.kpis.budget}
             value={formatCurrency(currentCampaign.remainingBudget, { currency: "USD" })}

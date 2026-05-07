@@ -6,10 +6,12 @@ import {
   CardGrid,
   CardLink,
   CodeBlock,
+  DownloadCard,
   H1,
   H2,
   H3,
   InlineCode,
+  InstallTabs,
   P,
   Step,
   Steps,
@@ -117,6 +119,20 @@ export function DocsPageContent({
                   </li>
                 ))}
               </UL>
+            );
+          case "install-tabs":
+            return <InstallTabs key={key} targets={block.targets} />;
+          case "download-card":
+            return (
+              <DownloadCard
+                key={key}
+                title={block.title}
+                description={block.description}
+                primaryHref={block.primaryHref}
+                primaryLabel={block.primaryLabel}
+                secondaryHref={block.secondaryHref}
+                secondaryLabel={block.secondaryLabel}
+              />
             );
           default:
             return null;

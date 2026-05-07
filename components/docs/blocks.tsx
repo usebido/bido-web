@@ -1,6 +1,8 @@
-import type { ReactNode } from "react";
+"use client";
+
+import { useState, type ReactNode } from "react";
 import Link from "next/link";
-import { ArrowRight, AlertTriangle, Info, Lightbulb } from "lucide-react";
+import { ArrowRight, AlertTriangle, Check, Copy, Download, ExternalLink, Info, Lightbulb } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 function slugify(text: string) {
@@ -178,5 +180,127 @@ export function Step({
       <div className="font-semibold text-foreground">{title}</div>
       <div className="mt-2 text-muted-foreground">{children}</div>
     </li>
+  );
+}
+
+export type InstallTarget = {
+  id: "claude-code" | "codex" | "openclaw";
+  label: string;
+  command: string;
+  hint?: string;
+};
+
+export function InstallTabs({ targets }: { targets: ReadonlyArray<InstallTarget> }) {
+  const [activeId, setActiveId] = useState<InstallTarget["id"]>(targets[0]?.id ?? "claude-code");
+  const [copied, setCopied] = useState(false);
+
+  const active = targets.find((target) => target.id === activeId) ?? targets[0];
+  if (!active) return null;
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(active.command);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1600);
+    } catch {
+      setCopied(false);
+    }
+  };
+
+  return (
+    <div className="my-6 overflow-hidden rounded-2xl border border-border bg-surface-2/70">
+      <div role="tablist" className="flex flex-wrap gap-1 border-b border-border bg-surface-2/40 px-2 py-2">
+        {targets.map((target) => {
+          const isActive = target.id === active.id;
+          return (
+            <button
+              key={target.id}
+              role="tab"
+              aria-selected={isActive}
+              onClick={() => {
+                setActiveId(target.id);
+                setCopied(false);
+              }}
+              className={cn(
+                "rounded-lg px-3 py-1.5 text-sm font-medium transition-colors",
+                isActive
+                  ? "bg-violet-soft text-violet"
+                  : "text-muted-foreground hover:bg-surface-2 hover:text-foreground",
+              )}
+            >
+              {target.label}
+            </button>
+          );
+        })}
+      </div>
+      <div className="relative">
+        <pre className="overflow-x-auto px-4 py-4 pr-14 font-mono text-[13px] leading-relaxed text-foreground">
+          <code>{active.command}</code>
+        </pre>
+        <button
+          type="button"
+          onClick={handleCopy}
+          aria-label="Copy command"
+          className="absolute right-2 top-2 inline-flex size-8 items-center justify-center rounded-md border border-border bg-surface-2/80 text-muted-foreground transition-colors hover:border-violet/40 hover:text-violet"
+        >
+          {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
+        </button>
+      </div>
+      {active.hint ? (
+        <div className="border-t border-border px-4 py-2 text-xs text-muted-foreground">{active.hint}</div>
+      ) : null}
+    </div>
+  );
+}
+
+export function DownloadCard({
+  title,
+  description,
+  primaryHref,
+  primaryLabel,
+  secondaryHref,
+  secondaryLabel,
+}: {
+  title: string;
+  description?: string;
+  primaryHref: string;
+  primaryLabel: string;
+  secondaryHref?: string;
+  secondaryLabel?: string;
+}) {
+  return (
+    <div className="my-6 flex flex-col gap-4 rounded-2xl border border-border bg-surface-2/50 p-5 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex items-start gap-3">
+        <div className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-xl border border-violet/30 bg-violet-soft text-violet">
+          <Download className="size-4" />
+        </div>
+        <div>
+          <div className="text-base font-semibold text-foreground">{title}</div>
+          {description ? <p className="mt-1 text-sm text-muted-foreground">{description}</p> : null}
+        </div>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        <a
+          href={primaryHref}
+          target="_blank"
+          rel="noreferrer"
+          className="inline-flex items-center gap-1.5 rounded-lg bg-violet px-3 py-1.5 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+        >
+          <Download className="size-3.5" />
+          {primaryLabel}
+        </a>
+        {secondaryHref && secondaryLabel ? (
+          <a
+            href={secondaryHref}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-surface-2 px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:border-violet/40 hover:text-violet"
+          >
+            <ExternalLink className="size-3.5" />
+            {secondaryLabel}
+          </a>
+        ) : null}
+      </div>
+    </div>
   );
 }

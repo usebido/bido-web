@@ -1,30 +1,22 @@
 import {
-  CLOAK_PROGRAM_ID,
-  createUtxo,
-  createZeroUtxo,
-  deriveUtxoKeypairFromSpendKey,
-  exportKeys,
-  fullWithdraw,
-  generateCloakKeys,
-  getNkFromUtxoPrivateKey,
-  importKeys,
-  isRootNotFoundError,
-  registerViewingKey,
-  transact,
-  type CloakKeyPair,
-  type Utxo,
-} from "@cloak.dev/sdk";
-import {
   Connection,
   PublicKey,
   Transaction,
   VersionedTransaction,
 } from "@solana/web3.js";
+import {
+  type CloakSdkModule,
+  getCloakRelayUrl,
+  getCloakSdk,
+  getDevnetMockUsdcMintAddress,
+  getSolanaNetwork,
+  isDevnetNetwork,
+} from "@/lib/cloak-config";
+import type { CloakKeyPair, Utxo } from "@cloak.dev/sdk";
 
 const KEYS_STORAGE_PREFIX = "bido:cloak:keys:";
 const REGISTRATION_STORAGE_PREFIX = "bido:cloak:registration:";
 const CAMPAIGN_UTXO_STORAGE_PREFIX = "bido:cloak:campaign-utxos:";
-const CLOAK_RELAY_URL = "https://api.cloak.ag";
 
 type StoredUtxo = {
   amount: string;
@@ -116,13 +108,14 @@ function deserializeUtxo(value: StoredUtxo): Utxo {
 }
 
 function loadKeys(walletAddress: string): CloakKeyPair | null {
+  const cloakSdk = getCloakSdk();
   const raw = window.localStorage.getItem(walletStorageKey(walletAddress));
   if (!raw) {
     return null;
   }
 
   try {
-    return importKeys(raw);
+    return cloakSdk.importKeys(raw);
   } catch {
     window.localStorage.removeItem(walletStorageKey(walletAddress));
     return null;
@@ -130,7 +123,8 @@ function loadKeys(walletAddress: string): CloakKeyPair | null {
 }
 
 function saveKeys(walletAddress: string, keys: CloakKeyPair) {
-  window.localStorage.setItem(walletStorageKey(walletAddress), exportKeys(keys));
+  const cloakSdk = getCloakSdk();
+  window.localStorage.setItem(walletStorageKey(walletAddress), cloakSdk.exportKeys(keys));
 }
 
 function loadCampaignUtxoState(campaignId: string): {
@@ -185,12 +179,13 @@ function emitProofProgress(
 }
 
 async function getOrCreateKeys(walletAddress: string): Promise<CloakKeyPair> {
+  const cloakSdk = getCloakSdk();
   const existing = loadKeys(walletAddress);
   if (existing) {
     return existing;
   }
 
-  const next = generateCloakKeys();
+  const next = cloakSdk.generateCloakKeys();
   saveKeys(walletAddress, next);
   return next;
 }
@@ -221,14 +216,29 @@ async function ensureViewingKeyRegistered(
   wallet: CloakWalletBindings,
   nk: Uint8Array,
 ): Promise<void> {
+  const cloakSdk = getCloakSdk();
   const cacheKey = registrationStorageKey(wallet.address);
   const alreadyRegistered = window.localStorage.getItem(cacheKey);
   if (alreadyRegistered === "1") {
     return;
   }
 
-  await registerViewingKey(relayUrl, wallet.publicKey, nk, wallet.signMessage);
+  await cloakSdk.registerViewingKey(relayUrl, wallet.publicKey, nk, wallet.signMessage);
   window.localStorage.setItem(cacheKey, "1");
+}
+
+async function ensureShieldPoolReady(connection: Connection, mint: PublicKey): Promise<void> {
+  const cloakSdk = getCloakSdk();
+  const { merkleTree } = cloakSdk.getShieldPoolPDAs(cloakSdk.CLOAK_PROGRAM_ID, mint);
+  const accountInfo = await connection.getAccountInfo(merkleTree, "confirmed");
+
+  if (accountInfo) {
+    return;
+  }
+
+  throw new Error(
+    `Cloak private funding is unavailable for mint ${mint.toBase58()} on ${connection.rpcEndpoint} because the shield pool Merkle tree ${merkleTree.toBase58()} is not initialized on this cluster.`,
+  );
 }
 
 export async function runPrivateCampaignFunding(params: {
@@ -240,36 +250,50 @@ export async function runPrivateCampaignFunding(params: {
   wallet: CloakWalletBindings;
   onProgress?: (status: string) => void;
 }): Promise<PrivateCampaignFundingResult> {
+  const network = getSolanaNetwork();
+  const cloakSdk = getCloakSdk(network);
+  const relayUrl = getCloakRelayUrl(network);
   const usdcMint = new PublicKey(params.usdcMintAddress);
   const vaultUsdcAta = new PublicKey(params.vaultUsdcAta);
   const budgetAtomic = decimalUsdcToAtomic(params.budgetUsdc);
 
+  if (isDevnetNetwork(network) && params.usdcMintAddress !== getDevnetMockUsdcMintAddress()) {
+    throw new Error(
+      `Cloak devnet private funding requires the mock USDC mint ${getDevnetMockUsdcMintAddress()}. The current mint is ${params.usdcMintAddress}.`,
+    );
+  }
+
+  await ensureShieldPoolReady(params.connection, usdcMint);
+
   const keys = await getOrCreateKeys(params.wallet.address);
-  const owner = await deriveUtxoKeypairFromSpendKey(keys.spend.sk_spend);
-  const nk = getNkFromUtxoPrivateKey(owner.privateKey);
+  const owner = await cloakSdk.deriveUtxoKeypairFromSpendKey(keys.spend.sk_spend);
+  const nk = cloakSdk.getNkFromUtxoPrivateKey(owner.privateKey);
 
   params.onProgress?.("Registering Cloak viewing key...");
-  await ensureViewingKeyRegistered(CLOAK_RELAY_URL, params.wallet, nk);
+  await ensureViewingKeyRegistered(relayUrl, params.wallet, nk);
 
   const storedState = loadCampaignUtxoState(params.campaignId);
   let inputUtxos = storedState.utxos;
   let depositSignature: string | null = storedState.depositSignature;
-  let cachedMerkleTree: Awaited<ReturnType<typeof transact>>["merkleTree"] | undefined;
+  let cachedMerkleTree: Awaited<ReturnType<CloakSdkModule["transact"]>>["merkleTree"] | undefined;
 
   if (inputUtxos.length === 0) {
     params.onProgress?.("Shielding USDC in Cloak...");
-    const output = await createUtxo(budgetAtomic, owner, usdcMint);
-    const result = await transact(
+    const output = await cloakSdk.createUtxo(budgetAtomic, owner, usdcMint);
+    const result = await cloakSdk.transact(
       {
-        inputUtxos: [await createZeroUtxo(usdcMint), await createZeroUtxo(usdcMint)],
-        outputUtxos: [output, await createZeroUtxo(usdcMint)],
+        inputUtxos: [
+          await cloakSdk.createZeroUtxo(usdcMint),
+          await cloakSdk.createZeroUtxo(usdcMint),
+        ],
+        outputUtxos: [output, await cloakSdk.createZeroUtxo(usdcMint)],
         externalAmount: budgetAtomic,
         depositor: params.wallet.publicKey,
       },
       {
         connection: params.connection,
-        programId: CLOAK_PROGRAM_ID,
-        relayUrl: CLOAK_RELAY_URL,
+        programId: cloakSdk.CLOAK_PROGRAM_ID,
+        relayUrl,
         signTransaction: params.wallet.signTransaction,
         signMessage: params.wallet.signMessage,
         depositorPublicKey: params.wallet.publicKey,
@@ -290,13 +314,13 @@ export async function runPrivateCampaignFunding(params: {
   const vaultBefore = await getVaultAmountAtomic(params.connection, vaultUsdcAta);
 
   params.onProgress?.("Withdrawing privately into the campaign vault...");
-  let withdrawResult: Awaited<ReturnType<typeof fullWithdraw>> | undefined;
+  let withdrawResult: Awaited<ReturnType<typeof cloakSdk.fullWithdraw>> | undefined;
   for (let attempt = 1; attempt <= 3; attempt += 1) {
     try {
-      withdrawResult = await fullWithdraw(inputUtxos, vaultUsdcAta, {
+      withdrawResult = await cloakSdk.fullWithdraw(inputUtxos, vaultUsdcAta, {
         connection: params.connection,
-        programId: CLOAK_PROGRAM_ID,
-        relayUrl: CLOAK_RELAY_URL,
+        programId: cloakSdk.CLOAK_PROGRAM_ID,
+        relayUrl,
         signTransaction: params.wallet.signTransaction,
         signMessage: params.wallet.signMessage,
         depositorPublicKey: params.wallet.publicKey,
@@ -309,7 +333,7 @@ export async function runPrivateCampaignFunding(params: {
       });
       break;
     } catch (error) {
-      if (!isRootNotFoundError(error) || attempt === 3) {
+      if (!cloakSdk.isRootNotFoundError(error) || attempt === 3) {
         throw error;
       }
       params.onProgress?.("Cloak root stale, retrying withdraw...");

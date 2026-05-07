@@ -53,6 +53,24 @@ export type DocBlock =
   | {
       type: "ul";
       items: ReadonlyArray<DocRichText>;
+    }
+  | {
+      type: "install-tabs";
+      targets: ReadonlyArray<{
+        id: "claude-code" | "codex" | "openclaw";
+        label: string;
+        command: string;
+        hint?: string;
+      }>;
+    }
+  | {
+      type: "download-card";
+      title: string;
+      description?: string;
+      primaryHref: string;
+      primaryLabel: string;
+      secondaryHref?: string;
+      secondaryLabel?: string;
     };
 
 export type LocalizedDocPage = {

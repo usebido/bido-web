@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { useWallets } from "@privy-io/react-auth/solana";
 import { getAssociatedTokenAddressSync } from "@solana/spl-token";
 import { Connection, PublicKey } from "@solana/web3.js";
+import { getDefaultUsdcMintAddress } from "@/lib/cloak-config";
 import { useI18n } from "@/components/providers/i18n-provider";
 import {
   DropdownMenu,
@@ -14,7 +15,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 const DEFAULT_SOLANA_RPC_URL = "https://api.devnet.solana.com";
-const DEFAULT_DEVNET_USDC_MINT = "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU";
 
 export function UsdcBalancePill() {
   const { wallets } = useWallets();
@@ -37,7 +37,8 @@ export function UsdcBalancePill() {
 
       try {
         const rpcUrl = process.env.NEXT_PUBLIC_SOLANA_RPC_URL ?? DEFAULT_SOLANA_RPC_URL;
-        const usdcMintAddress = process.env.NEXT_PUBLIC_SOLANA_USDC_MINT ?? DEFAULT_DEVNET_USDC_MINT;
+        const usdcMintAddress =
+          process.env.NEXT_PUBLIC_SOLANA_USDC_MINT ?? getDefaultUsdcMintAddress();
         const connection = new Connection(rpcUrl, "confirmed");
         const owner = new PublicKey(activeWallet.address);
         const mint = new PublicKey(usdcMintAddress);

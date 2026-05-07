@@ -50,14 +50,14 @@ NEXT_PUBLIC_LOGIN_ENABLED=true
 NEXT_PUBLIC_SOLANA_NETWORK=devnet
 NEXT_PUBLIC_SOLANA_RPC_URL=https://api.devnet.solana.com
 NEXT_PUBLIC_BIDO_API_BASE=http://localhost:3001/api
-NEXT_PUBLIC_SOLANA_USDC_MINT=4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU
+NEXT_PUBLIC_SOLANA_USDC_MINT=61ro7AExqfk4dZYoCyRzTahahCC2TdUUZ4M5epMPunJf
 NEXT_PUBLIC_KORA_RPC_URL=http://127.0.0.1:8080
 ```
 
 Observações:
 
 - `NEXT_PUBLIC_BIDO_API_BASE` é opcional no código, mas vale fixar explicitamente.
-- `NEXT_PUBLIC_SOLANA_USDC_MINT` usa o mint de USDC em devnet.
+- Para o Cloak em `devnet`, `NEXT_PUBLIC_SOLANA_USDC_MINT` deve usar o mock USDC `61ro7AExqfk4dZYoCyRzTahahCC2TdUUZ4M5epMPunJf`.
 
 ### Back-end
 
@@ -84,7 +84,7 @@ PRIVY_APP_SECRET=seu-privy-app-secret
 
 SOLANA_RPC_URL=https://api.devnet.solana.com
 SOLANA_CLUSTER=devnet
-SOLANA_USDC_MINT=4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU
+SOLANA_USDC_MINT=61ro7AExqfk4dZYoCyRzTahahCC2TdUUZ4M5epMPunJf
 SOLANA_CAMPAIGN_PROGRAM_ID=seu-program-id
 
 KORA_RPC_URL=http://127.0.0.1:8080

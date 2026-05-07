@@ -151,6 +151,10 @@ export const app = {
         budget: "Orçamento",
         maxBid: "Lance Máximo",
       },
+      fundingModes: {
+        private_cloak: "Private with Cloak",
+        public_direct: "Public direct",
+      },
       onchain: {
         sectionLabel: "Ativação On-Chain",
         active: "Campanha ativada",
@@ -438,6 +442,10 @@ export const app = {
         status: "Status",
         budget: "Budget",
         maxBid: "Max Bid",
+      },
+      fundingModes: {
+        private_cloak: "Private with Cloak",
+        public_direct: "Public direct",
       },
       onchain: {
         sectionLabel: "On-Chain Activation",
