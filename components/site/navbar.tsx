@@ -114,7 +114,7 @@ export function Navbar({
               </ul>
             </nav>
 
-            <div className="hidden shrink-0 items-center gap-2 lg:flex">
+            <div className="relative z-10 hidden shrink-0 items-center gap-2 lg:flex">
               <div className="inline-flex items-center rounded-full border border-border bg-surface/70 p-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
                 {(["pt-BR", "en"] as const).map((value) => (
                   <button

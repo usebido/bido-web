@@ -92,12 +92,10 @@ KORA_RPC_URL=http://127.0.0.1:8080
 
 ### Kora
 
-Crie ou ajuste o arquivo `programs/bido-campaign-program/kora/.env`:
+Crie ou ajuste o arquivo `programs-sol/kora/.env`:
 
 ```env
 KORA_PRIVATE_KEY=sua-private-key-base58-ou-array
-CONFIG=/Users/joaorubensbelluzzoneto/Documents/bido-solana/programs/bido-campaign-program/kora/kora.toml
-SIGNERS=/Users/joaorubensbelluzzoneto/Documents/bido-solana/programs/bido-campaign-program/kora/signers.toml
 RPC_URL=https://api.devnet.solana.com
 ```
 
@@ -125,18 +123,11 @@ npm run prisma:seed
 Opção direta:
 
 ```bash
-cd programs/bido-campaign-program/kora
+cd programs-sol/kora
 set -a
 source .env
 set +a
-kora --config /Users/joaorubensbelluzzoneto/Documents/bido-solana/programs/bido-campaign-program/kora/kora.toml --rpc-url https://api.devnet.solana.com rpc start --signers-config /Users/joaorubensbelluzzoneto/Documents/bido-solana/programs/bido-campaign-program/kora/signers.toml
-```
-
-Opção via script:
-
-```bash
-cd programs/bido-campaign-program/kora
-./run-kora.sh
+kora --config "$(pwd)/kora.toml" --rpc-url "${RPC_URL:-https://api.devnet.solana.com}" rpc start --signers-config "$(pwd)/signers.toml"
 ```
 
 Por padrão, o Kora sobe em:

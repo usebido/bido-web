@@ -4,6 +4,7 @@ import * as cloakDevnet from "@cloak.dev/sdk-devnet";
 export type CloakSdkModule = typeof import("@cloak.dev/sdk");
 
 export const DEVNET_CLOAK_RELAY_URL = "https://api.devnet.cloak.ag";
+export const DEVNET_CLOAK_FAUCET_URL = "https://devnet.cloak.ag/api/faucet";
 export const MAINNET_CLOAK_RELAY_URL = "https://api.cloak.ag";
 export const MAINNET_USDC_MINT = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
 

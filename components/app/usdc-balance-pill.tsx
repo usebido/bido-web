@@ -5,7 +5,13 @@ import { useEffect, useState } from "react";
 import { useWallets } from "@privy-io/react-auth/solana";
 import { getAssociatedTokenAddressSync } from "@solana/spl-token";
 import { Connection, PublicKey } from "@solana/web3.js";
-import { getDefaultUsdcMintAddress } from "@/lib/cloak-config";
+import { toast } from "sonner";
+import {
+  DEVNET_CLOAK_FAUCET_URL,
+  getDefaultUsdcMintAddress,
+  getSolanaNetwork,
+  isDevnetNetwork,
+} from "@/lib/cloak-config";
 import { useI18n } from "@/components/providers/i18n-provider";
 import {
   DropdownMenu,
@@ -20,13 +26,13 @@ export function UsdcBalancePill() {
   const { wallets } = useWallets();
   const { formatCurrency, messages } = useI18n();
   const [balance, setBalance] = useState<number | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [reloading, setReloading] = useState(false);
+  const [refreshTick, setRefreshTick] = useState(0);
   const activeWallet = wallets[0] ?? null;
 
   useEffect(() => {
     if (!activeWallet?.address) {
-      setBalance(null);
-      setLoading(false);
       return;
     }
 
@@ -64,7 +70,48 @@ export function UsdcBalancePill() {
     return () => {
       cancelled = true;
     };
-  }, [activeWallet?.address]);
+  }, [activeWallet?.address, refreshTick]);
+
+  const visibleBalance = activeWallet ? balance : null;
+  const visibleLoading = activeWallet ? loading : false;
+
+  async function requestFaucetFunds() {
+    if (!activeWallet?.address || reloading) {
+      return;
+    }
+
+    if (!isDevnetNetwork(getSolanaNetwork())) {
+      toast.error(messages.app.usdcBalance.faucetUnavailable);
+      return;
+    }
+
+    setReloading(true);
+
+    try {
+      const response = await fetch(DEVNET_CLOAK_FAUCET_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          wallet: activeWallet.address,
+          amount: 100_000_000,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Faucet request failed with status ${response.status}`);
+      }
+
+      toast.success(messages.app.usdcBalance.faucetSuccess);
+      setRefreshTick((current) => current + 1);
+    } catch (error) {
+      console.error(error);
+      toast.error(messages.app.usdcBalance.faucetFailed);
+    } finally {
+      setReloading(false);
+    }
+  }
 
   return (
     <DropdownMenu>
@@ -75,9 +122,9 @@ export function UsdcBalancePill() {
           aria-label={messages.app.usdcBalance.dropdownTrigger}
         >
           <span>
-            {loading
+            {visibleLoading
               ? "USDC ..."
-              : `USDC ${formatCurrency(balance ?? 0, {
+              : `USDC ${formatCurrency(visibleBalance ?? 0, {
                   currency: "USD",
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,
@@ -87,9 +134,16 @@ export function UsdcBalancePill() {
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-52">
-        <DropdownMenuItem className="gap-2">
+        <DropdownMenuItem
+          className="gap-2"
+          disabled={!activeWallet?.address || reloading}
+          onSelect={(event) => {
+            event.preventDefault();
+            void requestFaucetFunds();
+          }}
+        >
           <Wallet className="size-4 text-muted-foreground" aria-hidden="true" />
-          {messages.app.usdcBalance.reload}
+          {reloading ? messages.app.usdcBalance.reloading : messages.app.usdcBalance.reload}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

@@ -52,6 +52,10 @@ export const app = {
     usdcBalance: {
       dropdownTrigger: "Abrir ações do saldo USDC",
       reload: "Recarregar USDC",
+      reloading: "Solicitando USDC...",
+      faucetUnavailable: "O faucet da Cloak está disponível apenas em devnet.",
+      faucetSuccess: "Mock USDC solicitado. Atualizando saldo...",
+      faucetFailed: "Não foi possível solicitar mock USDC da Cloak.",
     },
     fallbackNewCampaign: "Nova campanha",
     campaignData: {
@@ -340,6 +344,10 @@ export const app = {
     usdcBalance: {
       dropdownTrigger: "Open USDC balance actions",
       reload: "Reload USDC",
+      reloading: "Requesting USDC...",
+      faucetUnavailable: "The Cloak faucet is only available on devnet.",
+      faucetSuccess: "Mock USDC requested. Refreshing balance...",
+      faucetFailed: "Failed to request mock USDC from Cloak.",
     },
     fallbackNewCampaign: "New campaign",
     campaignData: {
