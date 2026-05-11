@@ -28,9 +28,7 @@ export function AdPreview({ form }: { form: CampaignFormData }) {
         ? replace(t.brandedAdText, { brand: form.brandName })
         : t.defaultAdText;
 
-  const question = form.brandName.trim()
-    ? replace(t.brandedQuestion, { brand: form.brandName.toLowerCase() })
-    : t.defaultQuestion;
+  const question = t.defaultQuestion;
 
   return (
     <div className="rounded-2xl border border-border bg-card p-5">
@@ -51,18 +49,18 @@ export function AdPreview({ form }: { form: CampaignFormData }) {
         </button>
       </div>
 
-      <div className="rounded-xl border border-blue-100 bg-blue-50/60 p-3.5">
+      <div className="rounded-xl border border-blue-100 bg-blue-50/60 p-3.5 dark:border-blue-500/20 dark:bg-blue-500/10">
         <div className="mb-1.5 flex items-center justify-between">
           <div className="flex items-center gap-1.5">
-            <div className="flex size-4 items-center justify-center rounded-full bg-blue-400/30">
-              <Globe size={9} className="text-blue-600" />
+            <div className="flex size-4 items-center justify-center rounded-full bg-blue-400/30 dark:bg-blue-500/20">
+              <Globe size={9} className="text-blue-600 dark:text-blue-300" />
             </div>
             <span className="text-xs font-medium text-foreground">{domain}</span>
           </div>
           <span className="text-[10px] text-muted-foreground">{t.sponsored}</span>
         </div>
         <p className="mb-3 text-xs leading-relaxed text-foreground">{adText}</p>
-        <button className="flex items-center gap-1 rounded-lg border border-border bg-white px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-muted/50">
+        <button className="flex items-center gap-1 rounded-lg border border-border bg-white px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-muted/50 dark:bg-card dark:hover:bg-muted/40">
           {t.viewMore}
           <ChevronRight size={11} />
         </button>
