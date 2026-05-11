@@ -1184,16 +1184,15 @@ export function AppCampaignDetailScreen({ campaignId }: { campaignId: string }) 
               <h2 className="mt-2 text-xl font-semibold text-foreground">{t.onchain.pending}</h2>
               <p className="mt-1 text-sm text-muted-foreground">
                 {isPrivateCampaign && preShieldedAvailable
-                  ? `Your pre-shielded private balance covers this budget. Activating will skip the shield step and consume from your private balance for better privacy.`
+                  ? t.onchain.privatePreShieldedDescription
                   : isPrivateCampaign
-                  ? `This campaign uses the Cloak private funding flow. Initialize the vault, confirm the shield deposit and private withdraw, then finalize the budget on-chain for ${formatCurrency(
-                      currentCampaign.monthlyBudget,
-                      {
+                  ? replace(t.onchain.privatePendingDescription, {
+                      amount: formatCurrency(currentCampaign.monthlyBudget, {
                         currency: "USD",
                         minimumFractionDigits: 2,
                         maximumFractionDigits: 2,
-                      },
-                    )}.`
+                      }),
+                    })
                   : replace(t.onchain.pendingDescription, {
                       amount: formatCurrency(currentCampaign.monthlyBudget, {
                         currency: "USD",
