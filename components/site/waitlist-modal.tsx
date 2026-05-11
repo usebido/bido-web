@@ -98,8 +98,8 @@ export function WaitlistModal({
 
   const set =
     (k: keyof FormState) =>
-    (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
-      setForm((f) => ({ ...f, [k]: e.target.value }));
+      (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
+        setForm((f) => ({ ...f, [k]: e.target.value }));
 
   const setObjetivo = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const objetivo = e.target.value;
