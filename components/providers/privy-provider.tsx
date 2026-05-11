@@ -1,5 +1,6 @@
 "use client";
 
+import "@/lib/client-buffer-polyfill";
 import { PrivyProvider, type PrivyProviderProps } from "@privy-io/react-auth";
 import { createSolanaRpc, createSolanaRpcSubscriptions } from "@solana/kit";
 import { toSolanaWalletConnectors } from "@privy-io/react-auth/solana";
