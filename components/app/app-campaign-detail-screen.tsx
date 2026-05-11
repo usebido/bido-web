@@ -1236,12 +1236,6 @@ export function AppCampaignDetailScreen({ campaignId }: { campaignId: string }) 
             })}
           </div>
         ) : null}
-        {!balanceLoading && activeWallet ? (
-          <div className="mt-4 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 px-4 py-3 text-sm text-emerald-700">
-            {t.onchain.gasSponsoredHelp}
-          </div>
-        ) : null}
-
           <div className="mt-4 grid gap-3 md:grid-cols-3">
             <KpiCard
               label={messages.app.dashboard.costPerDecision}
@@ -1279,15 +1273,11 @@ export function AppCampaignDetailScreen({ campaignId }: { campaignId: string }) 
             />
           </div>
 
-          {isPrivateCampaign ? (
+          {isPrivateCampaign &&
+          (currentCampaign.cloakViewingKeyRegisteredAt || currentCampaign.cloakWithdrawTxHash) ? (
             <div className="mt-4 rounded-2xl border border-sky-500/30 bg-sky-500/5 px-4 py-3 text-sm text-sky-800">
-              <p>
-                Cloak runs non-custodially in the frontend. The app registers the viewing key,
-                shields the sponsor USDC with the official SDK, withdraws privately into the
-                campaign vault, and only then finalizes the budget accounting on the Bido program.
-              </p>
               {currentCampaign.cloakViewingKeyRegisteredAt ? (
-                <p className="mt-2">
+                <p>
                   Viewing key registered at{" "}
                   {formatDate(currentCampaign.cloakViewingKeyRegisteredAt, {
                     dateStyle: "medium",
