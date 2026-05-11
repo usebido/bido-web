@@ -53,29 +53,12 @@ type FundingOverlayState = {
   stepKey: string;
 };
 
-const PUBLIC_FLOW_STEPS = [
-  { key: "prepare", label: "Prepare vault" },
-  { key: "approve", label: "Approve wallet" },
-  { key: "submit", label: "Submit funding" },
-  { key: "confirm", label: "Confirm on-chain funding" },
-  { key: "finalize", label: "Finish activation" },
-] as const;
-
-const PRIVATE_FLOW_STEPS = [
-  { key: "prepare", label: "Prepare vault" },
-  { key: "register", label: "Register viewing key" },
-  { key: "shield", label: "Shield sponsor funds" },
-  { key: "withdraw", label: "Withdraw privately" },
-  { key: "fund", label: "Fund campaign vault" },
-  { key: "finalize", label: "Finalize activation" },
-] as const;
-
 const INITIAL_FUNDING_OVERLAY: FundingOverlayState = {
   open: false,
   status: "queued",
   progress: 0,
-  title: "Preparing private funding",
-  detail: "The Cloak flow is getting ready.",
+  title: "",
+  detail: "",
   signatureHint: null,
   mode: "activate",
   flowType: "private",
@@ -86,97 +69,9 @@ function delay(ms: number) {
   return new Promise((resolve) => window.setTimeout(resolve, ms));
 }
 
-function mapPrivateFundingProgress(status: string): Pick<
-  FundingOverlayState,
-  "progress" | "title" | "detail" | "stepKey"
-> {
-  if (status.startsWith("Registering Cloak viewing key")) {
-    return {
-      progress: 18,
-      title: "Registering your Cloak view",
-      detail: "Bido is linking a viewing key so this private flow remains auditable without exposing the sponsor trail.",
-      stepKey: "register",
-    };
-  }
-
-  if (status.startsWith("Using pre-shielded balance")) {
-    return {
-      progress: 32,
-      title: "Using existing private balance",
-      detail: "Your browser already has shielded USDC available, so the flow can skip the initial deposit.",
-      stepKey: "shield",
-    };
-  }
-
-  if (status.startsWith("Shielding USDC in Cloak")) {
-    return {
-      progress: 38,
-      title: "Shielding sponsor funds",
-      detail: "USDC is moving into Cloak before the campaign sees it, so the sponsor-to-campaign trail stays private.",
-      stepKey: "shield",
-    };
-  }
-
-  if (status.startsWith("Generating Cloak deposit proof")) {
-    return {
-      progress: 48,
-      title: "Generating deposit proof",
-      detail: status,
-      stepKey: "shield",
-    };
-  }
-
-  if (status.startsWith("Unshielding into ephemeral wallet")) {
-    return {
-      progress: 64,
-      title: "Withdrawing privately",
-      detail: "Cloak is moving the budget into a fresh temporary wallet that has no sponsor history on-chain.",
-      stepKey: "withdraw",
-    };
-  }
-
-  if (status.startsWith("Generating Cloak withdraw proof")) {
-    return {
-      progress: 76,
-      title: "Generating withdraw proof",
-      detail: status,
-      stepKey: "withdraw",
-    };
-  }
-
-  if (status.startsWith("Cloak root stale")) {
-    return {
-      progress: 74,
-      title: "Refreshing private state",
-      detail: "Cloak is retrying with a fresh root before continuing the withdraw.",
-      stepKey: "withdraw",
-    };
-  }
-
-  if (status.startsWith("Recovering ephemeral wallet")) {
-    return {
-      progress: 60,
-      title: "Recovering interrupted private funding",
-      detail: "The browser is restoring the temporary wallet created earlier so the vault can still receive the budget.",
-      stepKey: "withdraw",
-    };
-  }
-
-  if (status.startsWith("Funding campaign vault via Kora")) {
-    return {
-      progress: 88,
-      title: "Funding the campaign vault",
-      detail: "The private budget is being delivered to the campaign vault through the gas-sponsored Kora bundle.",
-      stepKey: "fund",
-    };
-  }
-
-  return {
-    progress: 12,
-    title: "Preparing private activation",
-    detail: status,
-    stepKey: "prepare",
-  };
+function extractPercent(status: string): number {
+  const match = status.match(/\((\d+)%\)/);
+  return match ? Number.parseInt(match[1] ?? "0", 10) : 0;
 }
 
 function KpiCard({
@@ -249,7 +144,123 @@ export function AppCampaignDetailScreen({ campaignId }: { campaignId: string }) 
   const router = useRouter();
   const { formatCurrency, formatDate, formatNumber, messages, replace } = useI18n();
   const t = messages.app.campaignDetail;
+  const overlayT = t.onchain.fundingOverlay;
+  const overlayPhases = overlayT.phases;
   const balanceFetchFailedLabel = t.onchain.balanceFetchFailed;
+
+  const PUBLIC_FLOW_STEPS = [
+    { key: "prepare", label: overlayT.steps.publicPrepare },
+    { key: "approve", label: overlayT.steps.publicApprove },
+    { key: "submit", label: overlayT.steps.publicSubmit },
+    { key: "confirm", label: overlayT.steps.publicConfirm },
+    { key: "finalize", label: overlayT.steps.publicFinalize },
+  ] as const;
+
+  const PRIVATE_FLOW_STEPS = [
+    { key: "prepare", label: overlayT.steps.privatePrepare },
+    { key: "register", label: overlayT.steps.privateRegister },
+    { key: "shield", label: overlayT.steps.privateShield },
+    { key: "withdraw", label: overlayT.steps.privateWithdraw },
+    { key: "fund", label: overlayT.steps.privateFund },
+    { key: "finalize", label: overlayT.steps.privateFinalize },
+  ] as const;
+
+  function mapPrivateFundingProgress(status: string): Pick<
+    FundingOverlayState,
+    "progress" | "title" | "detail" | "stepKey"
+  > {
+    if (status.startsWith("Registering Cloak viewing key")) {
+      return {
+        progress: 18,
+        title: overlayPhases.registerTitle,
+        detail: overlayPhases.registerDetail,
+        stepKey: "register",
+      };
+    }
+
+    if (status.startsWith("Using pre-shielded balance")) {
+      return {
+        progress: 32,
+        title: overlayPhases.preShieldedTitle,
+        detail: overlayPhases.preShieldedDetail,
+        stepKey: "shield",
+      };
+    }
+
+    if (status.startsWith("Shielding USDC in Cloak")) {
+      return {
+        progress: 38,
+        title: overlayPhases.shieldingTitle,
+        detail: overlayPhases.shieldingDetail,
+        stepKey: "shield",
+      };
+    }
+
+    if (status.startsWith("Generating Cloak deposit proof")) {
+      return {
+        progress: 48,
+        title: overlayPhases.depositProofTitle,
+        detail: replace(overlayPhases.depositProofDetail, {
+          percent: String(extractPercent(status)),
+        }),
+        stepKey: "shield",
+      };
+    }
+
+    if (status.startsWith("Unshielding into ephemeral wallet")) {
+      return {
+        progress: 64,
+        title: overlayPhases.withdrawingTitle,
+        detail: overlayPhases.withdrawingDetail,
+        stepKey: "withdraw",
+      };
+    }
+
+    if (status.startsWith("Generating Cloak withdraw proof")) {
+      return {
+        progress: 76,
+        title: overlayPhases.withdrawProofTitle,
+        detail: replace(overlayPhases.withdrawProofDetail, {
+          percent: String(extractPercent(status)),
+        }),
+        stepKey: "withdraw",
+      };
+    }
+
+    if (status.startsWith("Cloak root stale")) {
+      return {
+        progress: 74,
+        title: overlayPhases.refreshingTitle,
+        detail: overlayPhases.refreshingDetail,
+        stepKey: "withdraw",
+      };
+    }
+
+    if (status.startsWith("Recovering ephemeral wallet")) {
+      return {
+        progress: 60,
+        title: overlayPhases.recoveringTitle,
+        detail: overlayPhases.recoveringDetail,
+        stepKey: "withdraw",
+      };
+    }
+
+    if (status.startsWith("Funding campaign vault via Kora")) {
+      return {
+        progress: 88,
+        title: overlayPhases.fundingTitle,
+        detail: overlayPhases.fundingDetail,
+        stepKey: "fund",
+      };
+    }
+
+    return {
+      progress: 12,
+      title: overlayPhases.fallbackTitle,
+      detail: status,
+      stepKey: "prepare",
+    };
+  }
   const { ready: walletsReady, wallets } = useWallets();
   const { campaign, loading, error } = useCampaign(campaignId);
   const {
@@ -518,12 +529,12 @@ export function AppCampaignDetailScreen({ campaignId }: { campaignId: string }) 
         flowType: currentCampaign.privacyMode === "private_cloak" ? "private" : "public",
         title:
           currentCampaign.privacyMode === "private_cloak"
-            ? "Preparing private activation"
-            : "Preparing campaign activation",
+            ? overlayPhases.preparingPrivateTitle
+            : overlayPhases.preparingPublicTitle,
         detail:
           currentCampaign.privacyMode === "private_cloak"
-            ? "Bido is checking the campaign vault and lining up the Cloak flow before asking for signatures."
-            : "Bido is checking the campaign vault and preparing the funding transaction before asking for signatures.",
+            ? overlayPhases.preparingPrivateDetail
+            : overlayPhases.preparingPublicDetail,
         progress: 4,
         stepKey: "prepare",
       });
@@ -540,12 +551,9 @@ export function AppCampaignDetailScreen({ campaignId }: { campaignId: string }) 
         if (prepared.submissionMode === "kora" && prepared.koraSignerAddress) {
           updateFundingOverlay({
             progress: 8,
-            title: "Waiting for wallet approval",
-            detail:
-              prepared === undefined
-                ? "Approve the next transaction in your wallet."
-                : "Approve the campaign transaction in your wallet so Bido can continue activation.",
-            signatureHint: "A Privy signature request should be open now.",
+            title: overlayPhases.waitingApprovalTitle,
+            detail: overlayPhases.waitingApprovalDetail,
+            signatureHint: overlayT.signatureHint,
             stepKey: "approve",
           });
           const signed = await sponsorWallet.signTransaction({
@@ -555,8 +563,8 @@ export function AppCampaignDetailScreen({ campaignId }: { campaignId: string }) 
 
           updateFundingOverlay({
             progress: 12,
-            title: "Submitting signed transaction",
-            detail: "The signed transaction is being relayed to the network.",
+            title: overlayPhases.submittingTitle,
+            detail: overlayPhases.submittingKoraDetail,
             signatureHint: null,
             stepKey: "submit",
           });
@@ -570,9 +578,9 @@ export function AppCampaignDetailScreen({ campaignId }: { campaignId: string }) 
 
         updateFundingOverlay({
           progress: 8,
-          title: "Waiting for wallet approval",
-          detail: "Approve the campaign transaction in your wallet so Bido can continue activation.",
-          signatureHint: "A Privy signature request should be open now.",
+          title: overlayPhases.waitingApprovalTitle,
+          detail: overlayPhases.waitingApprovalDetail,
+          signatureHint: overlayT.signatureHint,
           stepKey: "approve",
         });
         const result = await sponsorWallet.signAndSendTransaction({
@@ -581,8 +589,8 @@ export function AppCampaignDetailScreen({ campaignId }: { campaignId: string }) 
         });
         updateFundingOverlay({
           progress: 12,
-          title: "Submitting signed transaction",
-          detail: "The signed transaction is being sent to Solana.",
+          title: overlayPhases.submittingTitle,
+          detail: overlayPhases.submittingDirectDetail,
           signatureHint: null,
           stepKey: "submit",
         });
@@ -595,19 +603,19 @@ export function AppCampaignDetailScreen({ campaignId }: { campaignId: string }) 
       if (needsInitialization) {
         updateFundingOverlay({
           progress: 6,
-          title: "Preparing campaign vault",
-          detail: "The campaign still needs its vault accounts, so Bido is preparing the initialization transaction.",
+          title: overlayPhases.preparingVaultTitle,
+          detail: overlayPhases.preparingVaultDetail,
           stepKey: "prepare",
         });
         const initialization = await prepareCampaignInitialization(currentCampaign.id);
         txHash = await runPreparedTransaction(initialization);
         updateFundingOverlay({
           progress: 14,
-          title: "Confirming vault setup",
+          title: overlayPhases.confirmingVaultTitle,
           detail:
             currentCampaign.privacyMode === "private_cloak"
-              ? "The app is waiting for the campaign vault references to be confirmed before the Cloak flow begins."
-              : "The app is waiting for the campaign vault references to be confirmed before funding starts.",
+              ? overlayPhases.confirmingVaultPrivateDetail
+              : overlayPhases.confirmingVaultPublicDetail,
           stepKey: "prepare",
         });
         const confirmedInitialization = await confirmCampaignInitialization(currentCampaign.id, txHash);
@@ -621,13 +629,13 @@ export function AppCampaignDetailScreen({ campaignId }: { campaignId: string }) 
 
       if (currentCampaign.privacyMode === "private_cloak") {
         if (!activeWallet?.signTransaction || !activeWallet.signMessage) {
-          throw new Error("The connected wallet must support transaction and message signing for Cloak");
+          throw new Error(overlayT.errors.walletMustSupportSigning);
         }
         if (!resolvedVaultUsdcAta) {
-          throw new Error("Campaign vault account is missing after initialization");
+          throw new Error(overlayT.errors.missingVault);
         }
         if (!resolvedCampaignPda || !resolvedProgramId) {
-          throw new Error("Campaign PDA or program ID missing after initialization");
+          throw new Error(overlayT.errors.missingPda);
         }
 
         const rpcUrl = process.env.NEXT_PUBLIC_SOLANA_RPC_URL ?? DEFAULT_SOLANA_RPC_URL;
@@ -641,9 +649,9 @@ export function AppCampaignDetailScreen({ campaignId }: { campaignId: string }) 
           publicKey: walletPublicKey,
           signMessage: async (message: Uint8Array) => {
             updateFundingOverlay({
-              title: "Signature needed",
-              detail: "Approve the Cloak authorization message in Privy to keep the private funding flow moving.",
-              signatureHint: "Check your wallet modal and approve the message request.",
+              title: overlayPhases.signatureNeededTitle,
+              detail: overlayPhases.signatureCloakMessageDetail,
+              signatureHint: overlayT.signatureMessageHint,
             });
             const result = await activeWallet.signMessage({ message });
             updateFundingOverlay({ signatureHint: null });
@@ -651,9 +659,9 @@ export function AppCampaignDetailScreen({ campaignId }: { campaignId: string }) 
           },
           signTransaction: async <T extends Transaction | VersionedTransaction>(transaction: T): Promise<T> => {
             updateFundingOverlay({
-              title: "Signature needed",
-              detail: "Approve the next Cloak transaction in Privy. This is expected during private deposit or withdraw steps.",
-              signatureHint: "Check your wallet modal and approve the transaction request.",
+              title: overlayPhases.signatureNeededTitle,
+              detail: overlayPhases.signatureCloakTransactionDetail,
+              signatureHint: overlayT.signatureTransactionHint,
             });
             const serialized =
               transaction instanceof Transaction
@@ -690,8 +698,8 @@ export function AppCampaignDetailScreen({ campaignId }: { campaignId: string }) 
 
         updateFundingOverlay({
           progress: 92,
-          title: "Saving privacy metadata",
-          detail: "The app is storing the Cloak references for this campaign so the private trail stays resumable and auditable.",
+          title: overlayPhases.savingMetadataTitle,
+          detail: overlayPhases.savingMetadataDetail,
           stepKey: "fund",
         });
         await setupCampaignPrivacy(currentCampaign.id, {
@@ -701,15 +709,15 @@ export function AppCampaignDetailScreen({ campaignId }: { campaignId: string }) 
 
         updateFundingOverlay({
           progress: 95,
-          title: "Confirming private deposit",
-          detail: "Bido is recording the shield deposit linked to this private campaign activation.",
+          title: overlayPhases.confirmingDepositTitle,
+          detail: overlayPhases.confirmingDepositDetail,
           stepKey: "finalize",
         });
         await confirmPrivacyDeposit(currentCampaign.id, cloakResult.shieldSignature);
         updateFundingOverlay({
           progress: 97,
-          title: "Confirming private withdraw",
-          detail: "Bido is recording the private withdraw into the campaign funding path.",
+          title: overlayPhases.confirmingWithdrawTitle,
+          detail: overlayPhases.confirmingWithdrawDetail,
           stepKey: "finalize",
         });
         await confirmPrivacyWithdraw(
@@ -720,43 +728,43 @@ export function AppCampaignDetailScreen({ campaignId }: { campaignId: string }) 
 
         updateFundingOverlay({
           progress: 99,
-          title: "Finalizing private activation",
-          detail: "The campaign budget is being marked as active on Bido after the private funding completed.",
+          title: overlayPhases.finalizingTitle,
+          detail: overlayPhases.finalizingDetail,
           stepKey: "finalize",
         });
         await confirmPrivateFinalization(currentCampaign.id, cloakResult.fundSignature);
         txHash = cloakResult.fundSignature;
         await finishFundingOverlay(
           "succeeded",
-          "Private campaign funded",
-          "The Cloak flow completed and the campaign vault received the budget.",
+          overlayPhases.successPrivateTitle,
+          overlayPhases.successPrivateDetail,
         );
       } else {
         updateFundingOverlay({
           progress: 58,
-          title: "Preparing campaign funding",
-          detail: "Bido is building the direct funding transaction for the campaign vault.",
+          title: overlayPhases.fundingPublicTitle,
+          detail: overlayPhases.fundingPublicDetail,
           stepKey: "submit",
         });
         const prepared = await prepareCampaignFunding(currentCampaign.id);
         txHash = await runPreparedTransaction(prepared);
         updateFundingOverlay({
           progress: 88,
-          title: "Confirming campaign funding",
-          detail: "The app is waiting for the on-chain funding confirmation before finishing activation.",
+          title: overlayPhases.confirmingPublicFundingTitle,
+          detail: overlayPhases.confirmingPublicFundingDetail,
           stepKey: "confirm",
         });
         await confirmCampaignFunding(currentCampaign.id, txHash);
         await finishFundingOverlay(
           "succeeded",
-          "Campaign activated",
-          "The campaign vault was funded and the activation completed on-chain.",
+          overlayPhases.successPublicTitle,
+          overlayPhases.successPublicDetail,
         );
       }
     } catch (currentError) {
       await finishFundingOverlay(
         "failed",
-        currentCampaign.privacyMode === "private_cloak" ? "Private funding failed" : "Campaign activation failed",
+        currentCampaign.privacyMode === "private_cloak" ? overlayPhases.failedPrivateTitle : overlayPhases.failedPublicTitle,
         currentError instanceof Error ? currentError.message : t.onchain.activationFailed,
       );
       setFundingError(currentError instanceof Error ? currentError.message : t.onchain.activationFailed);
@@ -770,7 +778,7 @@ export function AppCampaignDetailScreen({ campaignId }: { campaignId: string }) 
       return;
     }
     if (!activeWallet?.signTransaction || !activeWallet.signMessage) {
-      setFundingError("The connected wallet must support transaction and message signing for Cloak");
+      setFundingError(overlayT.errors.walletMustSupportSigning);
       return;
     }
     if (
@@ -778,7 +786,7 @@ export function AppCampaignDetailScreen({ campaignId }: { campaignId: string }) 
       !currentCampaign.onchainCampaignPda ||
       !currentCampaign.onchainProgramId
     ) {
-      setFundingError("Campaign is missing on-chain references to resume private funding");
+      setFundingError(overlayT.errors.missingOnchainReferences);
       return;
     }
 
@@ -786,8 +794,8 @@ export function AppCampaignDetailScreen({ campaignId }: { campaignId: string }) 
     setFundingError(null);
     openFundingOverlay("resume", {
       flowType: "private",
-      title: "Resuming private funding",
-      detail: "Bido is reopening the interrupted Cloak flow from this browser state.",
+      title: overlayPhases.resumingTitle,
+      detail: overlayPhases.resumingDetail,
       progress: 52,
       stepKey: "withdraw",
     });
@@ -804,9 +812,9 @@ export function AppCampaignDetailScreen({ campaignId }: { campaignId: string }) 
         publicKey: walletPublicKey,
         signMessage: async (message: Uint8Array) => {
           updateFundingOverlay({
-            title: "Signature needed",
-            detail: "Approve the recovery message in Privy so Bido can restore the temporary Cloak wallet.",
-            signatureHint: "Check your wallet modal and approve the message request.",
+            title: overlayPhases.signatureNeededTitle,
+            detail: overlayPhases.signatureRecoveryMessageDetail,
+            signatureHint: overlayT.signatureMessageHint,
           });
           const signResult = await activeWallet.signMessage({ message });
           updateFundingOverlay({ signatureHint: null });
@@ -814,9 +822,9 @@ export function AppCampaignDetailScreen({ campaignId }: { campaignId: string }) 
         },
         signTransaction: async <T extends Transaction | VersionedTransaction>(transaction: T): Promise<T> => {
           updateFundingOverlay({
-            title: "Signature needed",
-            detail: "Approve the resumed Cloak transaction in Privy to continue the private funding flow.",
-            signatureHint: "Check your wallet modal and approve the transaction request.",
+            title: overlayPhases.signatureNeededTitle,
+            detail: overlayPhases.signatureResumedTransactionDetail,
+            signatureHint: overlayT.signatureTransactionHint,
           });
           const serialized =
             transaction instanceof Transaction
@@ -851,20 +859,20 @@ export function AppCampaignDetailScreen({ campaignId }: { campaignId: string }) 
 
       updateFundingOverlay({
         progress: 99,
-        title: "Finalizing resumed activation",
-        detail: "The recovered private budget is being committed to the campaign record.",
+        title: overlayPhases.finalizingResumedTitle,
+        detail: overlayPhases.finalizingResumedDetail,
         stepKey: "finalize",
       });
       await confirmPrivateFinalization(currentCampaign.id, result.fundSignature);
       await finishFundingOverlay(
         "succeeded",
-        "Private funding resumed",
-        "The interrupted Cloak flow was recovered and the campaign vault received the budget.",
+        overlayPhases.resumedSuccessTitle,
+        overlayPhases.resumedSuccessDetail,
       );
     } catch (currentError) {
       await finishFundingOverlay(
         "failed",
-        "Resume failed",
+        overlayPhases.resumeFailedTitle,
         currentError instanceof Error ? currentError.message : t.onchain.activationFailed,
       );
       setFundingError(currentError instanceof Error ? currentError.message : t.onchain.activationFailed);
@@ -898,7 +906,7 @@ export function AppCampaignDetailScreen({ campaignId }: { campaignId: string }) 
               <div className="border-b border-border p-6 lg:border-r lg:border-b-0 lg:p-8">
                 <div className="inline-flex items-center gap-2 rounded-full border border-violet/20 bg-violet-soft px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-violet">
                   <Shield className="size-3.5" />
-                  {fundingOverlay.flowType === "private" ? "Cloak Private Funding" : "Campaign Activation"}
+                  {fundingOverlay.flowType === "private" ? overlayT.badgePrivate : overlayT.badgePublic}
                 </div>
                 <h2 className="mt-5 text-3xl font-bold tracking-tight text-foreground">
                   {fundingOverlay.title}
@@ -925,13 +933,13 @@ export function AppCampaignDetailScreen({ campaignId }: { campaignId: string }) 
                     </div>
                     <div>
                       <p className="text-sm font-medium text-foreground">
-                        {fundingOverlay.signatureHint ? "Wallet action required" : "Flow running in-browser"}
+                        {fundingOverlay.signatureHint ? overlayT.walletActionTitle : overlayT.flowRunningTitle}
                       </p>
                       <p className="mt-1 text-sm leading-6 text-muted-foreground">
                         {fundingOverlay.signatureHint ??
                           (fundingOverlay.flowType === "private"
-                            ? "This private flow is executing non-custodially in the browser. The screen will update as Cloak and Bido move through each stage."
-                            : "This activation is running in-browser. The screen will update as Bido prepares, signs, submits, and confirms the campaign funding.")}
+                            ? overlayT.flowRunningPrivateDetail
+                            : overlayT.flowRunningPublicDetail)}
                       </p>
                     </div>
                   </div>
@@ -969,7 +977,7 @@ export function AppCampaignDetailScreen({ campaignId }: { campaignId: string }) 
                           <span className="text-sm font-medium">{step.label}</span>
                         </div>
                         <span className="text-xs uppercase tracking-[0.16em]">
-                          {state === "completed" ? "Done" : state === "active" ? "Live" : "Pending"}
+                          {state === "completed" ? overlayT.stepDone : state === "active" ? overlayT.stepLive : overlayT.stepPending}
                         </span>
                       </div>
                     );
@@ -979,7 +987,7 @@ export function AppCampaignDetailScreen({ campaignId }: { campaignId: string }) 
                 {fundingOverlay.status === "failed" ? (
                   <div className="mt-6 flex justify-end">
                     <Button variant="outline" onClick={() => setFundingOverlay((current) => ({ ...current, open: false }))}>
-                      Close
+                      {overlayT.close}
                     </Button>
                   </div>
                 ) : null}
