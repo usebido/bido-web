@@ -1,19 +1,26 @@
 # Bido
 
+> **Colosseum submission note:** this repo (`bido-web`) is the sponsor-facing frontend. The full Bido stack is split across multiple public repos. Use the shortcuts below to jump to each one.
+
+## Repositories
+
+| Repo | What it is | Link |
+| --- | --- | --- |
+| `bido-web` (this repo) | Sponsor-facing Next.js app: landing, docs, dashboard, Cloak private funding UX | you are here |
+| `skills` | Installable agent contract (`bido-sponsored-intent`) distributed via `npx skills add usebido/skills` | https://github.com/usebido/skills |
+| `detect-intent` | Stateless sponsorable-intent classifier (Python + FastAPI + Groq) | https://github.com/usebido/detect-intent |
+| `backend` | Control plane: auth, campaigns, eligibility, auction, settlement, Cloak orchestration (NestJS + Prisma + Postgres + Privy) | https://github.com/usebido/backend |
+| `programs-sol` | On-chain settlement layer: Solana campaign program + Kora paymaster config | https://github.com/usebido/programs-sol |
+
+**Live surfaces**
+
+- Main site: https://usebido.com
+- Intent API: https://api-intent.usebido.com/detect-intent
+- Backend API: https://api.usebido.com
+
+---
+
 Bido turns AI agents into monetized decision agents. On each relevant user turn, Bido detects sponsorable intent, matches the request against eligible campaigns, runs a first-price auction, injects the winning sponsor into the agent's internal recommendation context, and settles the winning bid on Solana in USDC.
-
-The current system supports three core verticals in the agent contract:
-
-- `travel`
-- `health`
-- `ecommerce`
-
-The payout model is enforced on-chain:
-
-- `95%` of each winning bid goes to the agent owner wallet
-- `5%` goes to Bido
-
-This `frontend/` app is the sponsor-facing surface for the full stack: landing pages, docs, and the authenticated dashboard where advertisers create campaigns, fund them, and monitor performance.
 
 ## What Bido is building
 
