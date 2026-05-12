@@ -6,10 +6,10 @@
 
 | Repo | What it is | Link |
 | --- | --- | --- |
-| `bido-web` (this repo) | Sponsor-facing Next.js app: landing, docs, dashboard, Cloak private funding UX | you are here |
+| `bido-web` (this repo) | Sponsor-facing Next.js app: landing, docs, dashboard, funding UX | you are here |
 | `skills` | Installable agent contract (`bido-sponsored-intent`) distributed via `npx skills add usebido/skills` | https://github.com/usebido/skills |
 | `detect-intent` | Stateless sponsorable-intent classifier (Python + FastAPI + Groq) | https://github.com/usebido/detect-intent |
-| `backend` | Control plane: auth, campaigns, eligibility, auction, settlement, Cloak orchestration (NestJS + Prisma + Postgres + Privy) | https://github.com/usebido/backend |
+| `backend` | Control plane: auth, campaigns, eligibility, auction, settlement (NestJS + Prisma + Postgres + Privy) | https://github.com/usebido/backend |
 | `programs-sol` | On-chain settlement layer: Solana campaign program + Kora paymaster config | https://github.com/usebido/programs-sol |
 
 **Live surfaces**
@@ -20,163 +20,34 @@
 
 ---
 
-Bido turns AI agents into monetized decision agents. On each relevant user turn, Bido detects sponsorable intent, matches the request against eligible campaigns, runs a first-price auction, injects the winning sponsor into the agent's internal recommendation context, and settles the winning bid on Solana in USDC.
+## About this repo
 
-## What Bido is building
+`bido-web` is the sponsor-facing surface of Bido — the monetization layer for AI-native commerce. Bido lets sponsors compete to be the most relevant commercial option inside an AI agent's recommendation flow, with settlement happening on Solana in USDC.
 
-Bido is building the monetization layer for AI-native commerce.
+This frontend is where sponsors come to **understand the product, sign up, launch campaigns, fund them, and watch them perform**. Everything an advertiser does with Bido happens here.
 
-Instead of monetizing clicks, slots, or search-result positions, Bido monetizes the decision moment itself. When a user asks an agent for a product, trip, service, or recommendation, Bido lets sponsors compete to be the most relevant commercial option inside that decision flow without degrading the agent UX.
+## What this app does
 
-The system has five moving parts:
+`bido-web` covers four jobs end to end:
 
-1. An agent installs the Bido skill.
-2. The skill calls the intent detector on each user turn.
-3. If the turn is sponsorable, the backend matches it against eligible campaigns and selects a winner.
-4. The agent receives internal sponsor context before generating the final answer.
-5. The winning bid settles on Solana in USDC, splitting `95% / 5%` on-chain.
+- **Tell the story.** A public marketing site that explains the Bido model, the verticals it supports (`travel`, `health`, `ecommerce`), and the agent-side install flow.
+- **Onboard sponsors.** Wallet-based authentication, account setup, and a guided first-campaign flow so a new sponsor can go from signup to live campaign without friction.
+- **Run campaigns.** A full campaign dashboard: creation, editing, targeting, bidding strategy, budget management, pause/resume, and lifecycle controls.
+- **Show what's working.** Performance views with spend, win rate, impressions, and per-campaign analytics so sponsors can see how their budget is actually being spent inside agent conversations.
 
-## High-level architecture
+It also includes developer docs for agents that want to install the Bido skill and integrate with the intent + matcher APIs.
 
-```text
-                     user asks agent for help
-                                |
-                                v
-        +--------------------------------------------------+
-        | AI agent with bido-sponsored-intent installed    |
-        | Claude Code / Codex / OpenClaw / other agents    |
-        +------------------------+-------------------------+
-                                 |
-                                 | POST /detect-intent
-                                 v
-        +--------------------------------------------------+
-        | detect-intent                                     |
-        | Python + FastAPI + Groq                           |
-        | returns sponsorable? vertical? entities?          |
-        +------------------------+-------------------------+
-                                 |
-                                 | POST /api/intent/match
-                                 v
-        +--------------------------------------------------+
-        | backend                                           |
-        | NestJS + Prisma + Postgres + Privy                |
-        | filters campaigns, scores relevance,              |
-        | runs first-price auction, returns winner          |
-        +------------------------+-------------------------+
-                                 |
-                                 | settlement
-                                 v
-        +--------------------------------------------------+
-        | programs-sol                                      |
-        | Solana program holds campaign budgets in USDC     |
-        | and settles 95% agent / 5% Bido                  |
-        +------------------------+-------------------------+
-                                 ^
-                                 |
-        +--------------------------------------------------+
-        | frontend                                          |
-        | sponsor dashboard, docs, campaign creation,       |
-        | Cloak private funding flow                        |
-        +--------------------------------------------------+
-```
+## Stack
 
-## Private funding architecture with Cloak
-
-One of Bido's core product decisions is private campaign funding.
-
-Without privacy, a competitor can inspect the chain and infer:
-
-- which sponsor funded which campaign
-- when budget was added
-- how aggressively a brand is spending
-- which categories a brand is prioritizing
-
-That makes AI-agent advertising economically weak for real brands. Bido uses Cloak to remove the direct on-chain link between sponsor identity and campaign vault funding.
-
-### Current funding flow
-
-```text
-Sponsor wallet
-  -> shield into Cloak pool
-  -> unshield to fresh ephemeral wallet
-  -> SPL transfer to Bido campaign vault
-  -> finalize private funding in program
-```
-
-### Why the ephemeral wallet exists
-
-Cloak cannot withdraw directly to a PDA-owned token account. The system therefore creates a fresh on-curve ephemeral wallet in the browser, uses it as the withdrawal recipient, and then performs the last hop into the campaign vault.
-
-That gives Bido two properties at once:
-
-- campaign budgets still live in the program-owned vault
-- the chain no longer exposes a direct `sponsor -> vault` funding path
-
-### Where Kora fits
-
-The ephemeral wallet should not need preloaded SOL, because funding it with SOL would itself leak a new on-chain link. Bido uses Kora as a paymaster so the final transfer and funding-finalization transaction can be sent without requiring the sponsor to pre-fund the ephemeral wallet with gas.
-
-## Why this architecture matters
-
-Bido is not just an ad server attached to an agent. It is a full stack that coordinates:
-
-- user-intent understanding
-- sponsor eligibility
-- auction-based monetization
-- privacy-preserving funding
-- deterministic on-chain settlement
-
-The key product thesis is that agent monetization only works at scale if all of the following are true at the same time:
-
-- the base answer quality stays intact
-- the monetization trigger is intent-aware, not generic display inventory
-- the agent owner gets paid automatically
-- sponsors can fund campaigns without exposing their full market strategy on-chain
-
-## What this frontend includes
-
-This Next.js app is the operational shell for the whole product.
-
-Core areas:
-
-- public site for explaining the Bido model
-- docs for agent install and integration
-- sponsor app for campaign management
-- private Cloak funding flow
-- analytics and campaign performance views
-
-Current stack:
-
-- `Next.js 16`
+- `Next.js 16` (App Router)
 - `React 19`
-- `Tailwind CSS 4`
-- `shadcn/ui`
-- `Privy`
-- `@cloak.dev/sdk` and `@cloak.dev/sdk-devnet`
-- `@solana/kora`
+- `Tailwind CSS 4` + `shadcn/ui`
+- `Privy` for wallet-based auth
+- Solana wallet + USDC funding flows
+- Talks to the Bido `backend` API for everything campaign-related
 
-## End-to-end user turn lifecycle
+## How it fits the rest of the stack
 
-1. A user asks an agent for a decision-oriented recommendation.
-2. The installed Bido skill sends the raw message to `detect-intent`.
-3. If the result is not sponsorable, the flow stops there.
-4. If the result is sponsorable, the skill posts the detector payload plus `SOLANA_AGENT_WALLET` to the backend matcher.
-5. The backend filters eligible campaigns and runs a first-price auction.
-6. The winning campaign is returned as `selected_candidate`.
-7. The agent uses that sponsor as internal context before generating the final answer.
-8. The backend settles the winning bid on Solana.
-9. The program transfers `95%` to the agent owner wallet and `5%` to Bido.
+`bido-web` is the only surface a sponsor actually sees. Under the hood it talks to the `backend`, which orchestrates auctions, eligibility, and settlement against the `programs-sol` on-chain program. The `skills` and `detect-intent` repos handle the agent side and never touch this app directly.
 
-## Submission framing
-
-This README is written as a submission-oriented overview rather than a local setup guide because the important story is the system design:
-
-- agent-native monetization instead of web-native ads
-- on-chain settlement instead of black-box attribution
-- private campaign funding instead of publicly leaking sponsor strategy
-- installable agent runtime via `skills`
-- full-stack execution from intent detection to payout
-
-Using Colosseum Copilot as a writing aid, the strongest Solana submissions tend to present a sharp problem statement, concrete infra primitives, and explicit system boundaries rather than generic marketplace language. This README follows that framing.
-
-That sentence is an inference from Copilot winner-pattern data, not a claim about Bido itself.
+In short: agents bring the demand, the backend and programs run the auction and the payout, and `bido-web` is the room where sponsors decide what they want to buy.
