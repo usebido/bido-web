@@ -75,7 +75,9 @@ export const app = {
       intentLabels: {
         travel: "Viagens",
         health: "Saúde",
-        ecommerce: "E-commerce",
+        electronics: "Eletrônicos",
+        fashion: "Moda",
+        beauty: "Beleza",
       },
     },
 
@@ -364,11 +366,13 @@ export const app = {
         description: "Escolha em quais intenções sua campanha pode participar.",
         categoryLabel: "Categoria de Intenção",
         categoryPlaceholder: "Selecionar categoria",
-        categoryHelp: "Ex: Viagens, Saúde, E-commerce",
+        categoryHelp: "Ex: Viagens, Saúde, Eletrônicos, Moda, Beleza",
         categories: {
           travel: "Viagens",
           health: "Saúde",
-          ecommerce: "E-commerce",
+          electronics: "Eletrônicos",
+          fashion: "Moda",
+          beauty: "Beleza",
         },
       },
       budget: {
@@ -467,7 +471,9 @@ export const app = {
       intentLabels: {
         travel: "Travel",
         health: "Health",
-        ecommerce: "E-commerce",
+        electronics: "Electronics",
+        fashion: "Fashion",
+        beauty: "Beauty",
       },
     },
 
@@ -756,11 +762,13 @@ export const app = {
         description: "Choose which intents your campaign can participate in.",
         categoryLabel: "Intent Category",
         categoryPlaceholder: "Select category",
-        categoryHelp: "E.g.: Travel, Health, E-commerce",
+        categoryHelp: "E.g.: Travel, Health, Electronics, Fashion, Beauty",
         categories: {
           travel: "Travel",
           health: "Health",
-          ecommerce: "E-commerce",
+          electronics: "Electronics",
+          fashion: "Fashion",
+          beauty: "Beauty",
         },
       },
       budget: {
