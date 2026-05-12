@@ -116,90 +116,6 @@ That gives Bido two properties at once:
 
 The ephemeral wallet should not need preloaded SOL, because funding it with SOL would itself leak a new on-chain link. Bido uses Kora as a paymaster so the final transfer and funding-finalization transaction can be sent without requiring the sponsor to pre-fund the ephemeral wallet with gas.
 
-## Public repositories in the Bido stack
-
-Bido is split across multiple public repos plus this sponsor-facing frontend.
-
-### 1. `skills`
-
-GitHub: https://github.com/usebido/skills
-
-This repo contains the installable agent contract for Bido.
-
-It currently ships `bido-sponsored-intent`, which tells the agent runtime to:
-
-- inspect each user turn
-- call `detect-intent`
-- stop immediately if `sponsorable=false`
-- call the Bido matcher if `sponsorable=true`
-- inject the winning sponsor as internal recommendation context before the final answer
-
-This is the distribution point for `npx skills add usebido/skills -a <agent>`.
-
-### 2. `detect-intent`
-
-GitHub: https://github.com/usebido/detect-intent
-
-This is Bido's stateless sponsorable-intent classifier.
-
-It is a Python service built around FastAPI and Groq. Its job is to classify whether a user message is a monetizable decision moment and return structured intent data such as:
-
-- `vertical`
-- `intent_type`
-- `purchase_stage`
-- `urgency`
-- extracted entities like origin, destination, dates, and budget signals
-
-If it returns `sponsorable=false`, the monetization pipeline stops and the agent answers normally.
-
-### 3. `programs-sol`
-
-GitHub: https://github.com/usebido/programs-sol
-
-This repo contains the on-chain settlement layer.
-
-The Solana campaign program is responsible for:
-
-- initializing campaign accounts
-- holding campaign budgets in USDC vaults
-- accepting public or private funding flows
-- settling winning bids on-chain
-- enforcing the `95% agent / 5% Bido` split
-
-It also contains Bido's Kora configuration for gas sponsorship.
-
-### 4. `backend`
-
-GitHub: https://github.com/usebido/backend
-
-This is the control plane of the system.
-
-The backend handles:
-
-- sponsor authentication with Privy
-- campaign CRUD
-- eligibility filtering
-- first-price auction selection
-- analytics
-- settlement orchestration
-- Cloak private-funding state and confirmation flows
-
-The public matcher contract used by the skill is `POST /api/intent/match`.
-
-### 5. `frontend`
-
-This repository folder, `frontend/`, is the sponsor-facing application surface.
-
-It contains:
-
-- marketing pages
-- developer docs
-- sponsor onboarding
-- authenticated campaign dashboard
-- campaign creation and editing
-- budget and analytics views
-- Cloak private-funding UX
-
 ## Why this architecture matters
 
 Bido is not just an ad server attached to an agent. It is a full stack that coordinates:
@@ -264,13 +180,3 @@ This README is written as a submission-oriented overview rather than a local set
 Using Colosseum Copilot as a writing aid, the strongest Solana submissions tend to present a sharp problem statement, concrete infra primitives, and explicit system boundaries rather than generic marketplace language. This README follows that framing.
 
 That sentence is an inference from Copilot winner-pattern data, not a claim about Bido itself.
-
-## Related links
-
-- Skills: https://github.com/usebido/skills
-- Intent detector: https://github.com/usebido/detect-intent
-- Solana programs: https://github.com/usebido/programs-sol
-- Backend: https://github.com/usebido/backend
-- Main site: https://usebido.com
-- Intent API: https://api-intent.usebido.com/detect-intent
-- Backend API: https://api.usebido.com
