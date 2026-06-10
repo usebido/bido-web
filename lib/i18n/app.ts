@@ -78,6 +78,7 @@ export const app = {
         electronics: "Eletrônicos",
         fashion: "Moda",
         beauty: "Beleza",
+        crypto: "Cripto",
       },
     },
 
@@ -366,13 +367,14 @@ export const app = {
         description: "Escolha em quais intenções sua campanha pode participar.",
         categoryLabel: "Categoria de Intenção",
         categoryPlaceholder: "Selecionar categoria",
-        categoryHelp: "Ex: Viagens, Saúde, Eletrônicos, Moda, Beleza",
+        categoryHelp: "Ex: Viagens, Saúde, Eletrônicos, Moda, Beleza, Cripto",
         categories: {
           travel: "Viagens",
           health: "Saúde",
           electronics: "Eletrônicos",
           fashion: "Moda",
           beauty: "Beleza",
+          crypto: "Cripto",
         },
       },
       budget: {
@@ -474,6 +476,7 @@ export const app = {
         electronics: "Electronics",
         fashion: "Fashion",
         beauty: "Beauty",
+        crypto: "Crypto",
       },
     },
 
@@ -762,13 +765,14 @@ export const app = {
         description: "Choose which intents your campaign can participate in.",
         categoryLabel: "Intent Category",
         categoryPlaceholder: "Select category",
-        categoryHelp: "E.g.: Travel, Health, Electronics, Fashion, Beauty",
+        categoryHelp: "E.g.: Travel, Health, Electronics, Fashion, Beauty, Crypto",
         categories: {
           travel: "Travel",
           health: "Health",
           electronics: "Electronics",
           fashion: "Fashion",
           beauty: "Beauty",
+          crypto: "Crypto",
         },
       },
       budget: {

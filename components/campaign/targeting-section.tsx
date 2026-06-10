@@ -29,6 +29,7 @@ export function TargetingSection({ form, onChange }: TargetingSectionProps) {
             <SelectItem value="electronics">{t.categories.electronics}</SelectItem>
             <SelectItem value="fashion">{t.categories.fashion}</SelectItem>
             <SelectItem value="beauty">{t.categories.beauty}</SelectItem>
+            <SelectItem value="crypto">{t.categories.crypto}</SelectItem>
           </SelectContent>
         </Select>
         <p className="mt-2 text-sm text-muted-foreground">{t.categoryHelp}</p>
