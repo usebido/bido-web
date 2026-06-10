@@ -3,12 +3,16 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Shield, Wallet } from "lucide-react";
 import { AdInfoSection } from "@/components/campaign/ad-info-section";
 import { TargetingSection } from "@/components/campaign/targeting-section";
 import { BudgetSection } from "@/components/campaign/budget-section";
 import { AdPreview } from "@/components/campaign/ad-preview";
-import { INITIAL_FORM, type CampaignFormData } from "@/lib/campaign-types";
+import {
+  INITIAL_FORM,
+  type CampaignFormData,
+  type CampaignPrivacyMode,
+} from "@/lib/campaign-types";
 import { useCampaignActions } from "@/lib/hooks/use-campaigns";
 import { useI18n } from "@/components/providers/i18n-provider";
 
@@ -24,10 +28,34 @@ export function NewCampaignScreen({
   const router = useRouter();
   const { messages } = useI18n();
   const t = messages.app.campaignForm;
+  const privacyT = t.privacyMode;
   const { createCampaign, editCampaign } = useCampaignActions();
   const [form, setForm] = useState<CampaignFormData>(initialForm);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+
+  const privacyModeOptions: Array<{
+    value: CampaignPrivacyMode;
+    title: string;
+    description: string;
+    badge: string;
+    icon: typeof Shield;
+  }> = [
+    {
+      value: "private_cloak",
+      title: privacyT.privateTitle,
+      description: privacyT.privateDescription,
+      badge: privacyT.privateBadge,
+      icon: Shield,
+    },
+    {
+      value: "public_direct",
+      title: privacyT.publicTitle,
+      description: privacyT.publicDescription,
+      badge: privacyT.publicBadge,
+      icon: Wallet,
+    },
+  ];
 
   function handleChange(updates: Partial<CampaignFormData>) {
     setForm((prev) => ({ ...prev, ...updates }));
@@ -75,6 +103,54 @@ export function NewCampaignScreen({
 
       <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[1fr_340px]">
         <div className="flex flex-col gap-5">
+          <section className="rounded-2xl border border-border bg-card p-6">
+            <h2 className="mb-0.5 text-lg font-semibold text-foreground">{privacyT.title}</h2>
+            <p className="mb-6 text-sm text-muted-foreground">{privacyT.description}</p>
+
+            <div className="grid gap-3 md:grid-cols-2">
+              {privacyModeOptions.map((option) => {
+                const Icon = option.icon;
+                const active = form.privacyMode === option.value;
+
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => handleChange({ privacyMode: option.value })}
+                    className={`rounded-2xl border p-4 text-left transition-colors ${
+                      active
+                        ? "border-primary bg-primary/5 shadow-sm"
+                        : "border-border bg-background hover:border-primary/40 hover:bg-muted/40"
+                    }`}
+                    aria-pressed={active}
+                  >
+                    <div className="mb-3 flex items-start justify-between gap-3">
+                      <div className="flex size-10 items-center justify-center rounded-xl bg-muted text-foreground">
+                        <Icon size={18} />
+                      </div>
+                      <span
+                        className={`rounded-full px-2.5 py-1 text-[11px] font-medium ${
+                          active
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-muted text-muted-foreground"
+                        }`}
+                      >
+                        {option.badge}
+                      </span>
+                    </div>
+
+                    <div className="space-y-1">
+                      <p className="text-sm font-semibold text-foreground">{option.title}</p>
+                      <p className="text-sm leading-relaxed text-muted-foreground">
+                        {option.description}
+                      </p>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+
           <AdInfoSection form={form} onChange={handleChange} />
           <TargetingSection form={form} onChange={handleChange} />
           <BudgetSection form={form} onChange={handleChange} />

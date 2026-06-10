@@ -25,10 +25,7 @@ export function TargetingSection({ form, onChange }: TargetingSectionProps) {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="travel">{t.categories.travel}</SelectItem>
-            <SelectItem value="health">{t.categories.health}</SelectItem>
-            <SelectItem value="electronics">{t.categories.electronics}</SelectItem>
-            <SelectItem value="fashion">{t.categories.fashion}</SelectItem>
-            <SelectItem value="beauty">{t.categories.beauty}</SelectItem>
+            <SelectItem value="ecommerce">{t.categories.ecommerce}</SelectItem>
             <SelectItem value="crypto">{t.categories.crypto}</SelectItem>
           </SelectContent>
         </Select>

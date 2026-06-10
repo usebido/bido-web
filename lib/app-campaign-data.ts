@@ -1,7 +1,7 @@
 export type ApiCampaignStatus = "draft" | "in_review" | "active" | "paused" | "archived";
 export type ApiCampaignObjective = "acquisition" | "monetization";
 export type ApiCampaignOnchainStatus = "not_started" | "funded_onchain";
-export type ApiCampaignPrivacyMode = "private_cloak";
+export type ApiCampaignPrivacyMode = "private_cloak" | "public_direct";
 export type ApiCampaignPrivacyFundingStatus =
   | "not_started"
   | "setup_pending"

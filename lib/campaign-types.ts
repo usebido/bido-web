@@ -1,6 +1,6 @@
 export type CampaignObjective = "traffic" | "lead_generation" | "awareness";
 export type DeviceTarget = "all" | "custom";
-export type CampaignPrivacyMode = "private_cloak";
+export type CampaignPrivacyMode = "private_cloak" | "public_direct";
 
 export interface CampaignFormData {
   brandName: string;
