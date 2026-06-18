@@ -38,17 +38,19 @@ export function AdInfoSection({ form, onChange }: AdInfoSectionProps) {
       <div className="mb-5">
         <div className="mb-1.5 flex items-center justify-between">
           <label className="flex items-center gap-1.5 text-sm text-muted-foreground">
-            {t.offerLabel}
+            {t.productDescriptionLabel}
             <HelpCircle size={13} className="text-muted-foreground/70" />
           </label>
-          <span className="text-xs text-muted-foreground">{form.offerText.length}/500</span>
+          <span className="text-xs text-muted-foreground">
+            {form.productDescription.length}/500
+          </span>
         </div>
         <textarea
           maxLength={500}
           rows={4}
-          value={form.offerText}
-          onChange={(e) => onChange({ offerText: e.target.value })}
-          placeholder={t.offerPlaceholder}
+          value={form.productDescription}
+          onChange={(e) => onChange({ productDescription: e.target.value })}
+          placeholder={t.productDescriptionPlaceholder}
           className="w-full resize-none rounded-lg border border-input bg-background px-3 py-2.5 text-sm leading-relaxed text-foreground transition-[box-shadow,border-color] placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 focus:border-ring"
         />
       </div>

@@ -7,6 +7,14 @@ import {
 import type { CampaignFormData } from "@/lib/campaign-types";
 import { bidoFetch, type GetAccessToken } from "./client";
 
+function toCampaignPayload(form: CampaignFormData) {
+  return {
+    ...form,
+    offerText: form.productDescription,
+    productDescription: form.productDescription,
+  };
+}
+
 export type AnalyticsPeriod = "7d" | "30d" | "90d";
 
 export type PrepareInitializationResponse = {
@@ -85,13 +93,13 @@ export const campaignsApi = {
   create: (token: GetAccessToken, form: CampaignFormData) =>
     bidoFetch<ApiCampaign>(token, "/campaigns", {
       method: "POST",
-      body: JSON.stringify(form),
+      body: JSON.stringify(toCampaignPayload(form)),
     }),
 
   update: (token: GetAccessToken, id: string, form: CampaignFormData) =>
     bidoFetch<ApiCampaign>(token, `/campaigns/${id}`, {
       method: "PATCH",
-      body: JSON.stringify(form),
+      body: JSON.stringify(toCampaignPayload(form)),
     }),
 
   remove: (token: GetAccessToken, id: string) =>

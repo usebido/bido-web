@@ -4,7 +4,7 @@ export type CampaignPrivacyMode = "private_cloak" | "public_direct";
 
 export interface CampaignFormData {
   brandName: string;
-  offerText: string;
+  productDescription: string;
   destinationUrl: string;
   location: string;
   intentCategory: string;
@@ -15,7 +15,7 @@ export interface CampaignFormData {
 
 export const INITIAL_FORM: CampaignFormData = {
   brandName: "",
-  offerText: "",
+  productDescription: "",
   destinationUrl: "",
   location: "Global",
   intentCategory: "",

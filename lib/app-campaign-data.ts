@@ -57,6 +57,7 @@ export type ApiCampaign = {
   objective: ApiCampaignObjective;
   destinationUrl: string;
   summary: string;
+  productDescription: string;
   geo: string;
   intentCategory: string;
   monthlyBudgetUsd: number;
@@ -150,6 +151,7 @@ export type CampaignRecord = {
   intentCategory: string;
   updatedAt: string;
   summary: string;
+  productDescription: string;
   sponsorWallet: string | null;
   onchainStatus: ApiCampaignOnchainStatus;
   privacyMode: ApiCampaignPrivacyMode;
@@ -185,6 +187,7 @@ export function mapApiCampaignToRecord(
   const spend = series.reduce((total, point) => total + point.spend, 0);
   const remainingBudget =
     campaign.onchainBudgetAvailableUsdc ?? Math.max(campaign.monthlyBudgetUsd - spend, 0);
+  const productDescription = campaign.productDescription || campaign.summary;
 
   return {
     id: campaign.id,
@@ -213,7 +216,8 @@ export function mapApiCampaignToRecord(
     destinationUrl: campaign.destinationUrl,
     intentCategory: campaign.intentCategory,
     updatedAt: campaign.updatedAt,
-    summary: campaign.summary,
+    summary: productDescription,
+    productDescription,
     sponsorWallet: campaign.sponsorWallet,
     onchainStatus: campaign.onchainStatus,
     privacyMode: campaign.privacyMode,

@@ -1042,7 +1042,9 @@ export function AppCampaignDetailScreen({ campaignId }: { campaignId: string }) 
             {fundingModeLabel}
           </span>
         </div>
-        <p className="mt-0.5 text-sm text-muted-foreground">{currentCampaign.summary}</p>
+        <p className="mt-0.5 text-sm text-muted-foreground">
+          {currentCampaign.productDescription}
+        </p>
       </header>
 
       {analyticsError ? (

@@ -20,10 +20,10 @@ export function AdPreview({ form }: { form: CampaignFormData }) {
   const domain = extractDomain(form.destinationUrl, t.defaultDomain);
 
   const adText =
-    form.offerText.trim().length > 10
-      ? form.offerText.length > 120
-        ? `${form.offerText.slice(0, 120)}...`
-        : form.offerText
+    form.productDescription.trim().length > 10
+      ? form.productDescription.length > 120
+        ? `${form.productDescription.slice(0, 120)}...`
+        : form.productDescription
       : form.brandName.trim()
         ? replace(t.brandedAdText, { brand: form.brandName })
         : t.defaultAdText;

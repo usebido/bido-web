@@ -456,7 +456,7 @@ export function useCampaignActions() {
 export function campaignToForm(campaign: CampaignRecord): CampaignFormData {
   return {
     brandName: campaign.name,
-    offerText: campaign.summary,
+    productDescription: campaign.productDescription,
     destinationUrl: campaign.destinationUrl,
     location: campaign.geo || "Global",
     intentCategory: campaign.intentCategory,
