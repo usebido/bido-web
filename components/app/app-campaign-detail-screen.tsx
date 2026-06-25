@@ -7,12 +7,7 @@ import { ArrowLeft, CheckCircle2, ChevronDown, ExternalLink, Pencil, Pause, Rock
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import { useWallets } from "@privy-io/react-auth/solana";
 import { getAssociatedTokenAddressSync } from "@solana/spl-token";
-import {
-  Connection,
-  PublicKey,
-  Transaction,
-  VersionedTransaction,
-} from "@solana/web3.js";
+import { Connection, PublicKey } from "@solana/web3.js";
 import bs58 from "bs58";
 import {
   ChartContainer,
@@ -29,13 +24,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ShimmerBlock } from "@/components/ui/animated-loading-skeleton";
 import { OrbitalLoader } from "@/components/ui/orbital-loader";
 import { useI18n } from "@/components/providers/i18n-provider";
-import { getDefaultUsdcMintAddress, getSolanaNetwork } from "@/lib/cloak-config";
-import {
-  canUsePreShieldedBalance,
-  hasPendingPrivateCampaignFunding,
-  runPrivateCampaignFunding,
-  runResumePrivateCampaignFunding,
-} from "@/lib/cloak-flow";
+import { getDefaultUsdcMintAddress, getSolanaNetwork } from "@/lib/solana-config";
 import { useCampaign, useCampaignActions, useCampaignAnalytics, useCampaignTransactions } from "@/lib/hooks/use-campaigns";
 import { cn } from "@/lib/utils";
 
@@ -48,8 +37,6 @@ type FundingOverlayState = {
   title: string;
   detail: string;
   signatureHint: string | null;
-  mode: "activate" | "resume";
-  flowType: "public" | "private";
   stepKey: string;
 };
 
@@ -60,18 +47,11 @@ const INITIAL_FUNDING_OVERLAY: FundingOverlayState = {
   title: "",
   detail: "",
   signatureHint: null,
-  mode: "activate",
-  flowType: "private",
   stepKey: "prepare",
 };
 
 function delay(ms: number) {
   return new Promise((resolve) => window.setTimeout(resolve, ms));
-}
-
-function extractPercent(status: string): number {
-  const match = status.match(/\((\d+)%\)/);
-  return match ? Number.parseInt(match[1] ?? "0", 10) : 0;
 }
 
 function KpiCard({
@@ -156,111 +136,6 @@ export function AppCampaignDetailScreen({ campaignId }: { campaignId: string }) 
     { key: "finalize", label: overlayT.steps.publicFinalize },
   ] as const;
 
-  const PRIVATE_FLOW_STEPS = [
-    { key: "prepare", label: overlayT.steps.privatePrepare },
-    { key: "register", label: overlayT.steps.privateRegister },
-    { key: "shield", label: overlayT.steps.privateShield },
-    { key: "withdraw", label: overlayT.steps.privateWithdraw },
-    { key: "fund", label: overlayT.steps.privateFund },
-    { key: "finalize", label: overlayT.steps.privateFinalize },
-  ] as const;
-
-  function mapPrivateFundingProgress(status: string): Pick<
-    FundingOverlayState,
-    "progress" | "title" | "detail" | "stepKey"
-  > {
-    if (status.startsWith("Registering Cloak viewing key")) {
-      return {
-        progress: 18,
-        title: overlayPhases.registerTitle,
-        detail: overlayPhases.registerDetail,
-        stepKey: "register",
-      };
-    }
-
-    if (status.startsWith("Using pre-shielded balance")) {
-      return {
-        progress: 32,
-        title: overlayPhases.preShieldedTitle,
-        detail: overlayPhases.preShieldedDetail,
-        stepKey: "shield",
-      };
-    }
-
-    if (status.startsWith("Shielding USDC in Cloak")) {
-      return {
-        progress: 38,
-        title: overlayPhases.shieldingTitle,
-        detail: overlayPhases.shieldingDetail,
-        stepKey: "shield",
-      };
-    }
-
-    if (status.startsWith("Generating Cloak deposit proof")) {
-      return {
-        progress: 48,
-        title: overlayPhases.depositProofTitle,
-        detail: replace(overlayPhases.depositProofDetail, {
-          percent: String(extractPercent(status)),
-        }),
-        stepKey: "shield",
-      };
-    }
-
-    if (status.startsWith("Unshielding into ephemeral wallet")) {
-      return {
-        progress: 64,
-        title: overlayPhases.withdrawingTitle,
-        detail: overlayPhases.withdrawingDetail,
-        stepKey: "withdraw",
-      };
-    }
-
-    if (status.startsWith("Generating Cloak withdraw proof")) {
-      return {
-        progress: 76,
-        title: overlayPhases.withdrawProofTitle,
-        detail: replace(overlayPhases.withdrawProofDetail, {
-          percent: String(extractPercent(status)),
-        }),
-        stepKey: "withdraw",
-      };
-    }
-
-    if (status.startsWith("Cloak root stale")) {
-      return {
-        progress: 74,
-        title: overlayPhases.refreshingTitle,
-        detail: overlayPhases.refreshingDetail,
-        stepKey: "withdraw",
-      };
-    }
-
-    if (status.startsWith("Recovering ephemeral wallet")) {
-      return {
-        progress: 60,
-        title: overlayPhases.recoveringTitle,
-        detail: overlayPhases.recoveringDetail,
-        stepKey: "withdraw",
-      };
-    }
-
-    if (status.startsWith("Funding campaign vault via Kora")) {
-      return {
-        progress: 88,
-        title: overlayPhases.fundingTitle,
-        detail: overlayPhases.fundingDetail,
-        stepKey: "fund",
-      };
-    }
-
-    return {
-      progress: 12,
-      title: overlayPhases.fallbackTitle,
-      detail: status,
-      stepKey: "prepare",
-    };
-  }
   const { ready: walletsReady, wallets } = useWallets();
   const { campaign, loading, error } = useCampaign(campaignId);
   const {
@@ -271,10 +146,6 @@ export function AppCampaignDetailScreen({ campaignId }: { campaignId: string }) 
     prepareCampaignFunding,
     relayCampaignFunding,
     confirmCampaignFunding,
-    setupCampaignPrivacy,
-    confirmPrivacyDeposit,
-    confirmPrivacyWithdraw,
-    confirmPrivateFinalization,
     solanaChain,
   } = useCampaignActions();
   const [selectedPeriod, setSelectedPeriod] = useState<PeriodKey>("30d");
@@ -383,23 +254,6 @@ export function AppCampaignDetailScreen({ campaignId }: { campaignId: string }) 
   }, [activeWallet?.address, balanceFetchFailedLabel, walletsReady]);
 
   const requiredUsdc = currentCampaign?.monthlyBudget ?? 0;
-  const isPrivateCampaign = currentCampaign?.privacyMode === "private_cloak";
-  const usdcMintAddress =
-    process.env.NEXT_PUBLIC_SOLANA_USDC_MINT ?? getDefaultUsdcMintAddress();
-  const pendingPrivateFunding =
-    !!activeWallet?.address &&
-    !!currentCampaign &&
-    currentCampaign.privacyMode === "private_cloak" &&
-    hasPendingPrivateCampaignFunding(activeWallet.address, currentCampaign.id);
-  const preShieldedAvailable =
-    !!activeWallet?.address &&
-    !!currentCampaign &&
-    currentCampaign.privacyMode === "private_cloak" &&
-    canUsePreShieldedBalance(
-      activeWallet.address,
-      usdcMintAddress,
-      currentCampaign.monthlyBudget,
-    );
   const effectiveUsdcBalance = activeWallet ? usdcBalance : null;
   const hasEnoughUsdc = effectiveUsdcBalance !== null && effectiveUsdcBalance >= requiredUsdc;
   const activationDisabledReason = !walletsReady
@@ -440,9 +294,6 @@ export function AppCampaignDetailScreen({ campaignId }: { campaignId: string }) 
   };
   const transactionKindTone: Record<string, string> = {
     funding: "bg-sky-500/10 text-sky-700 ring-1 ring-sky-500/20",
-    privacy_deposit: "bg-indigo-500/10 text-indigo-700 ring-1 ring-indigo-500/20",
-    privacy_withdrawal: "bg-cyan-500/10 text-cyan-700 ring-1 ring-cyan-500/20",
-    privacy_finalization: "bg-violet-500/10 text-violet-700 ring-1 ring-violet-500/20",
     settlement: "bg-emerald-500/10 text-emerald-700 ring-1 ring-emerald-500/20",
     settlement_retry: "bg-amber-500/10 text-amber-700 ring-1 ring-amber-500/20",
     withdrawal: "bg-rose-500/10 text-rose-700 ring-1 ring-rose-500/20",
@@ -469,13 +320,11 @@ export function AppCampaignDetailScreen({ campaignId }: { campaignId: string }) 
     router.push("/app/campaigns");
   }
 
-  function openFundingOverlay(mode: FundingOverlayState["mode"], initial: Partial<FundingOverlayState> = {}) {
+  function openFundingOverlay(initial: Partial<FundingOverlayState> = {}) {
     setFundingOverlay({
       ...INITIAL_FUNDING_OVERLAY,
       open: true,
       status: "running",
-      mode,
-      flowType: "private",
       ...initial,
     });
   }
@@ -485,15 +334,6 @@ export function AppCampaignDetailScreen({ campaignId }: { campaignId: string }) 
       ...current,
       ...next,
     }));
-  }
-
-  function syncFundingOverlayProgress(status: string) {
-    const mapped = mapPrivateFundingProgress(status);
-    updateFundingOverlay({
-      status: "running",
-      signatureHint: null,
-      ...mapped,
-    });
   }
 
   async function finishFundingOverlay(status: FundingOverlayStatus, title: string, detail: string) {
@@ -522,19 +362,9 @@ export function AppCampaignDetailScreen({ campaignId }: { campaignId: string }) 
 
     try {
       let txHash: string;
-      let resolvedVaultUsdcAta = currentCampaign.onchainVaultTokenAccount;
-      let resolvedCampaignPda = currentCampaign.onchainCampaignPda;
-      let resolvedProgramId = currentCampaign.onchainProgramId;
-      openFundingOverlay("activate", {
-        flowType: currentCampaign.privacyMode === "private_cloak" ? "private" : "public",
-        title:
-          currentCampaign.privacyMode === "private_cloak"
-            ? overlayPhases.preparingPrivateTitle
-            : overlayPhases.preparingPublicTitle,
-        detail:
-          currentCampaign.privacyMode === "private_cloak"
-            ? overlayPhases.preparingPrivateDetail
-            : overlayPhases.preparingPublicDetail,
+      openFundingOverlay({
+        title: overlayPhases.preparingPublicTitle,
+        detail: overlayPhases.preparingPublicDetail,
         progress: 4,
         stepKey: "prepare",
       });
@@ -612,267 +442,36 @@ export function AppCampaignDetailScreen({ campaignId }: { campaignId: string }) 
         updateFundingOverlay({
           progress: 14,
           title: overlayPhases.confirmingVaultTitle,
-          detail:
-            currentCampaign.privacyMode === "private_cloak"
-              ? overlayPhases.confirmingVaultPrivateDetail
-              : overlayPhases.confirmingVaultPublicDetail,
+          detail: overlayPhases.confirmingVaultPublicDetail,
           stepKey: "prepare",
         });
-        const confirmedInitialization = await confirmCampaignInitialization(currentCampaign.id, txHash);
-        resolvedVaultUsdcAta =
-          confirmedInitialization.onchainVaultTokenAccount ?? initialization.vaultUsdcAta;
-        resolvedCampaignPda =
-          confirmedInitialization.onchainCampaignPda ?? initialization.campaignPda;
-        resolvedProgramId =
-          confirmedInitialization.onchainProgramId ?? initialization.programId;
+        await confirmCampaignInitialization(currentCampaign.id, txHash);
       }
-
-      if (currentCampaign.privacyMode === "private_cloak") {
-        if (!activeWallet?.signTransaction || !activeWallet.signMessage) {
-          throw new Error(overlayT.errors.walletMustSupportSigning);
-        }
-        if (!resolvedVaultUsdcAta) {
-          throw new Error(overlayT.errors.missingVault);
-        }
-        if (!resolvedCampaignPda || !resolvedProgramId) {
-          throw new Error(overlayT.errors.missingPda);
-        }
-
-        const rpcUrl = process.env.NEXT_PUBLIC_SOLANA_RPC_URL ?? DEFAULT_SOLANA_RPC_URL;
-        const usdcMintAddress =
-          process.env.NEXT_PUBLIC_SOLANA_USDC_MINT ?? getDefaultUsdcMintAddress();
-        const connection = new Connection(rpcUrl, "confirmed");
-        const walletPublicKey = new PublicKey(activeWallet.address);
-
-        const cloakWallet = {
-          address: activeWallet.address,
-          publicKey: walletPublicKey,
-          signMessage: async (message: Uint8Array) => {
-            updateFundingOverlay({
-              title: overlayPhases.signatureNeededTitle,
-              detail: overlayPhases.signatureCloakMessageDetail,
-              signatureHint: overlayT.signatureMessageHint,
-            });
-            const result = await activeWallet.signMessage({ message });
-            updateFundingOverlay({ signatureHint: null });
-            return result.signature;
-          },
-          signTransaction: async <T extends Transaction | VersionedTransaction>(transaction: T): Promise<T> => {
-            updateFundingOverlay({
-              title: overlayPhases.signatureNeededTitle,
-              detail: overlayPhases.signatureCloakTransactionDetail,
-              signatureHint: overlayT.signatureTransactionHint,
-            });
-            const serialized =
-              transaction instanceof Transaction
-                ? transaction.serialize({
-                    verifySignatures: false,
-                    requireAllSignatures: false,
-                  })
-                : transaction.serialize();
-
-            const signed = await activeWallet.signTransaction({
-              transaction: serialized,
-              chain: solanaChain,
-            });
-
-            updateFundingOverlay({ signatureHint: null });
-            return (transaction instanceof VersionedTransaction
-              ? VersionedTransaction.deserialize(signed.signedTransaction)
-              : Transaction.from(signed.signedTransaction)) as T;
-          },
-        };
-
-        const cloakResult = await runPrivateCampaignFunding({
-          campaignId: currentCampaign.id,
-          budgetUsdc: currentCampaign.monthlyBudget,
-          usdcMintAddress,
-          vaultUsdcAta: resolvedVaultUsdcAta,
-          campaignPda: resolvedCampaignPda,
-          programId: resolvedProgramId,
-          usePreShielded: preShieldedAvailable,
-          connection,
-          wallet: cloakWallet,
-          onProgress: syncFundingOverlayProgress,
-        });
-
-        updateFundingOverlay({
-          progress: 92,
-          title: overlayPhases.savingMetadataTitle,
-          detail: overlayPhases.savingMetadataDetail,
-          stepKey: "fund",
-        });
-        await setupCampaignPrivacy(currentCampaign.id, {
-          viewingKeyRegistered: true,
-          viewingKeyReference: cloakResult.viewingKeyReference,
-        });
-
-        updateFundingOverlay({
-          progress: 95,
-          title: overlayPhases.confirmingDepositTitle,
-          detail: overlayPhases.confirmingDepositDetail,
-          stepKey: "finalize",
-        });
-        await confirmPrivacyDeposit(currentCampaign.id, cloakResult.shieldSignature);
-        updateFundingOverlay({
-          progress: 97,
-          title: overlayPhases.confirmingWithdrawTitle,
-          detail: overlayPhases.confirmingWithdrawDetail,
-          stepKey: "finalize",
-        });
-        await confirmPrivacyWithdraw(
-          currentCampaign.id,
-          cloakResult.withdrawSignature,
-          cloakResult.fundedAmountAtomic,
-        );
-
-        updateFundingOverlay({
-          progress: 99,
-          title: overlayPhases.finalizingTitle,
-          detail: overlayPhases.finalizingDetail,
-          stepKey: "finalize",
-        });
-        await confirmPrivateFinalization(currentCampaign.id, cloakResult.fundSignature);
-        txHash = cloakResult.fundSignature;
-        await finishFundingOverlay(
-          "succeeded",
-          overlayPhases.successPrivateTitle,
-          overlayPhases.successPrivateDetail,
-        );
-      } else {
-        updateFundingOverlay({
-          progress: 58,
-          title: overlayPhases.fundingPublicTitle,
-          detail: overlayPhases.fundingPublicDetail,
-          stepKey: "submit",
-        });
-        const prepared = await prepareCampaignFunding(currentCampaign.id);
-        txHash = await runPreparedTransaction(prepared);
-        updateFundingOverlay({
-          progress: 88,
-          title: overlayPhases.confirmingPublicFundingTitle,
-          detail: overlayPhases.confirmingPublicFundingDetail,
-          stepKey: "confirm",
-        });
-        await confirmCampaignFunding(currentCampaign.id, txHash);
-        await finishFundingOverlay(
-          "succeeded",
-          overlayPhases.successPublicTitle,
-          overlayPhases.successPublicDetail,
-        );
-      }
-    } catch (currentError) {
-      await finishFundingOverlay(
-        "failed",
-        currentCampaign.privacyMode === "private_cloak" ? overlayPhases.failedPrivateTitle : overlayPhases.failedPublicTitle,
-        currentError instanceof Error ? currentError.message : t.onchain.activationFailed,
-      );
-      setFundingError(currentError instanceof Error ? currentError.message : t.onchain.activationFailed);
-    } finally {
-      setFundingPending(false);
-    }
-  }
-
-  async function handleResumePrivateFunding() {
-    if (!currentCampaign) {
-      return;
-    }
-    if (!activeWallet?.signTransaction || !activeWallet.signMessage) {
-      setFundingError(overlayT.errors.walletMustSupportSigning);
-      return;
-    }
-    if (
-      !currentCampaign.onchainVaultTokenAccount ||
-      !currentCampaign.onchainCampaignPda ||
-      !currentCampaign.onchainProgramId
-    ) {
-      setFundingError(overlayT.errors.missingOnchainReferences);
-      return;
-    }
-
-    setFundingPending(true);
-    setFundingError(null);
-    openFundingOverlay("resume", {
-      flowType: "private",
-      title: overlayPhases.resumingTitle,
-      detail: overlayPhases.resumingDetail,
-      progress: 52,
-      stepKey: "withdraw",
-    });
-
-    try {
-      const rpcUrl = process.env.NEXT_PUBLIC_SOLANA_RPC_URL ?? DEFAULT_SOLANA_RPC_URL;
-      const usdcMintAddress =
-        process.env.NEXT_PUBLIC_SOLANA_USDC_MINT ?? getDefaultUsdcMintAddress();
-      const connection = new Connection(rpcUrl, "confirmed");
-      const walletPublicKey = new PublicKey(activeWallet.address);
-
-      const cloakWallet = {
-        address: activeWallet.address,
-        publicKey: walletPublicKey,
-        signMessage: async (message: Uint8Array) => {
-          updateFundingOverlay({
-            title: overlayPhases.signatureNeededTitle,
-            detail: overlayPhases.signatureRecoveryMessageDetail,
-            signatureHint: overlayT.signatureMessageHint,
-          });
-          const signResult = await activeWallet.signMessage({ message });
-          updateFundingOverlay({ signatureHint: null });
-          return signResult.signature;
-        },
-        signTransaction: async <T extends Transaction | VersionedTransaction>(transaction: T): Promise<T> => {
-          updateFundingOverlay({
-            title: overlayPhases.signatureNeededTitle,
-            detail: overlayPhases.signatureResumedTransactionDetail,
-            signatureHint: overlayT.signatureTransactionHint,
-          });
-          const serialized =
-            transaction instanceof Transaction
-              ? transaction.serialize({
-                  verifySignatures: false,
-                  requireAllSignatures: false,
-                })
-              : transaction.serialize();
-
-          const signed = await activeWallet.signTransaction({
-            transaction: serialized,
-            chain: solanaChain,
-          });
-
-          updateFundingOverlay({ signatureHint: null });
-          return (transaction instanceof VersionedTransaction
-            ? VersionedTransaction.deserialize(signed.signedTransaction)
-            : Transaction.from(signed.signedTransaction)) as T;
-        },
-      };
-
-      const result = await runResumePrivateCampaignFunding({
-        campaignId: currentCampaign.id,
-        usdcMintAddress,
-        vaultUsdcAta: currentCampaign.onchainVaultTokenAccount,
-        campaignPda: currentCampaign.onchainCampaignPda,
-        programId: currentCampaign.onchainProgramId,
-        connection,
-        wallet: cloakWallet,
-        onProgress: syncFundingOverlayProgress,
-      });
 
       updateFundingOverlay({
-        progress: 99,
-        title: overlayPhases.finalizingResumedTitle,
-        detail: overlayPhases.finalizingResumedDetail,
-        stepKey: "finalize",
+        progress: 58,
+        title: overlayPhases.fundingPublicTitle,
+        detail: overlayPhases.fundingPublicDetail,
+        stepKey: "submit",
       });
-      await confirmPrivateFinalization(currentCampaign.id, result.fundSignature);
+      const prepared = await prepareCampaignFunding(currentCampaign.id);
+      txHash = await runPreparedTransaction(prepared);
+      updateFundingOverlay({
+        progress: 88,
+        title: overlayPhases.confirmingPublicFundingTitle,
+        detail: overlayPhases.confirmingPublicFundingDetail,
+        stepKey: "confirm",
+      });
+      await confirmCampaignFunding(currentCampaign.id, txHash);
       await finishFundingOverlay(
         "succeeded",
-        overlayPhases.resumedSuccessTitle,
-        overlayPhases.resumedSuccessDetail,
+        overlayPhases.successPublicTitle,
+        overlayPhases.successPublicDetail,
       );
     } catch (currentError) {
       await finishFundingOverlay(
         "failed",
-        overlayPhases.resumeFailedTitle,
+        overlayPhases.failedPublicTitle,
         currentError instanceof Error ? currentError.message : t.onchain.activationFailed,
       );
       setFundingError(currentError instanceof Error ? currentError.message : t.onchain.activationFailed);
@@ -893,8 +492,7 @@ export function AppCampaignDetailScreen({ campaignId }: { campaignId: string }) 
     );
   }
 
-  const fundingModeLabel = t.fundingModes[currentCampaign.privacyMode];
-  const overlaySteps = fundingOverlay.flowType === "private" ? PRIVATE_FLOW_STEPS : PUBLIC_FLOW_STEPS;
+  const overlaySteps = PUBLIC_FLOW_STEPS;
   const overlayCurrentIndex = overlaySteps.findIndex((item) => item.key === fundingOverlay.stepKey);
 
   return (
@@ -906,7 +504,7 @@ export function AppCampaignDetailScreen({ campaignId }: { campaignId: string }) 
               <div className="border-b border-border p-6 lg:border-r lg:border-b-0 lg:p-8">
                 <div className="inline-flex items-center gap-2 rounded-full border border-violet/20 bg-violet-soft px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-violet">
                   <Shield className="size-3.5" />
-                  {fundingOverlay.flowType === "private" ? overlayT.badgePrivate : overlayT.badgePublic}
+                  {overlayT.badgePublic}
                 </div>
                 <h2 className="mt-5 text-3xl font-bold tracking-tight text-foreground">
                   {fundingOverlay.title}
@@ -936,10 +534,7 @@ export function AppCampaignDetailScreen({ campaignId }: { campaignId: string }) 
                         {fundingOverlay.signatureHint ? overlayT.walletActionTitle : overlayT.flowRunningTitle}
                       </p>
                       <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                        {fundingOverlay.signatureHint ??
-                          (fundingOverlay.flowType === "private"
-                            ? overlayT.flowRunningPrivateDetail
-                            : overlayT.flowRunningPublicDetail)}
+                        {fundingOverlay.signatureHint ?? overlayT.flowRunningPublicDetail}
                       </p>
                     </div>
                   </div>
@@ -995,13 +590,7 @@ export function AppCampaignDetailScreen({ campaignId }: { campaignId: string }) 
 
               <div className="p-4 lg:p-6">
                 <ProcessingCard
-                  name={
-                    fundingOverlay.mode === "resume"
-                      ? "CloakRecovery"
-                      : fundingOverlay.flowType === "private"
-                        ? "CloakActivation"
-                        : "CampaignActivation"
-                  }
+                  name="CampaignActivation"
                   status={fundingOverlay.status}
                   progress={fundingOverlay.progress}
                   label={fundingOverlay.title}
@@ -1036,12 +625,7 @@ export function AppCampaignDetailScreen({ campaignId }: { campaignId: string }) 
       />
 
       <header className="mb-5">
-        <div className="flex flex-wrap items-center gap-3">
-          <h1 className="text-2xl font-bold tracking-tight text-foreground text-balance">{currentCampaign.name}</h1>
-          <span className="inline-flex items-center rounded-full border border-violet/20 bg-violet/10 px-3 py-1 text-xs font-medium text-violet">
-            {fundingModeLabel}
-          </span>
-        </div>
+        <h1 className="text-2xl font-bold tracking-tight text-foreground text-balance">{currentCampaign.name}</h1>
         <p className="mt-0.5 text-sm text-muted-foreground">
           {currentCampaign.productDescription}
         </p>
@@ -1152,39 +736,7 @@ export function AppCampaignDetailScreen({ campaignId }: { campaignId: string }) 
         </div>
       </section>
 
-      {pendingPrivateFunding && currentCampaign.onchainStatus !== "funded_onchain" ? (
-        <section className="mt-5 rounded-2xl border border-amber-500/40 bg-amber-500/5 p-6">
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.16em] text-amber-700">
-                Private funding interrupted
-              </p>
-              <h2 className="mt-2 text-xl font-semibold text-foreground">
-                Resume to deliver the budget
-              </h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Your USDC was shielded into Cloak and unshielded to a temporary wallet on this
-                device, but the campaign vault never received it. Click below to sign the recovery
-                message and finish funding. Until you do, the funds are stuck in the temporary
-                wallet on this browser.
-              </p>
-            </div>
-            <div className="flex flex-col items-stretch gap-2">
-              <button
-                type="button"
-                onClick={handleResumePrivateFunding}
-                disabled={fundingPending}
-                className="inline-flex items-center justify-center gap-2 rounded-2xl bg-amber-500 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-amber-500/90 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {fundingPending ? <Wallet className="size-4 animate-pulse" /> : <Rocket className="size-4" />}
-                {fundingPending ? t.onchain.signing : "Resume private funding"}
-              </button>
-            </div>
-          </div>
-        </section>
-      ) : null}
-
-      {!pendingPrivateFunding && currentCampaign.onchainStatus !== "funded_onchain" ? (
+      {currentCampaign.onchainStatus !== "funded_onchain" ? (
         <section className="mt-5 rounded-2xl border border-border bg-card p-6">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
@@ -1193,23 +745,13 @@ export function AppCampaignDetailScreen({ campaignId }: { campaignId: string }) 
               </p>
               <h2 className="mt-2 text-xl font-semibold text-foreground">{t.onchain.pending}</h2>
               <p className="mt-1 text-sm text-muted-foreground">
-                {isPrivateCampaign && preShieldedAvailable
-                  ? t.onchain.privatePreShieldedDescription
-                  : isPrivateCampaign
-                  ? replace(t.onchain.privatePendingDescription, {
-                      amount: formatCurrency(currentCampaign.monthlyBudget, {
-                        currency: "USD",
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      }),
-                    })
-                  : replace(t.onchain.pendingDescription, {
-                      amount: formatCurrency(currentCampaign.monthlyBudget, {
-                        currency: "USD",
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      }),
-                    })}
+                {replace(t.onchain.pendingDescription, {
+                  amount: formatCurrency(currentCampaign.monthlyBudget, {
+                    currency: "USD",
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  }),
+                })}
               </p>
             </div>
 
@@ -1276,40 +818,7 @@ export function AppCampaignDetailScreen({ campaignId }: { campaignId: string }) 
                     : t.onchain.privyWalletFallback
               }
             />
-            <KpiCard
-              label="Privacy status"
-              value={currentCampaign.privacyFundingStatus.replaceAll("_", " ")}
-            />
           </div>
-
-          {isPrivateCampaign &&
-          (currentCampaign.cloakViewingKeyRegisteredAt || currentCampaign.cloakWithdrawTxHash) ? (
-            <div className="mt-4 rounded-2xl border border-sky-500/30 bg-sky-500/5 px-4 py-3 text-sm text-sky-800">
-              {currentCampaign.cloakViewingKeyRegisteredAt ? (
-                <p>
-                  Viewing key registered at{" "}
-                  {formatDate(currentCampaign.cloakViewingKeyRegisteredAt, {
-                    dateStyle: "medium",
-                    timeStyle: "short",
-                  })}
-                  .
-                </p>
-              ) : null}
-              {currentCampaign.cloakWithdrawTxHash ? (
-                <p className="mt-2">
-                  Last withdraw:{" "}
-                  <a
-                    href={explorerTxUrl(currentCampaign.cloakWithdrawTxHash)}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="font-medium underline underline-offset-4"
-                  >
-                    {compactAddress(currentCampaign.cloakWithdrawTxHash, currentCampaign.cloakWithdrawTxHash)}
-                  </a>
-                </p>
-              ) : null}
-            </div>
-          ) : null}
         </section>
       ) : null}
 

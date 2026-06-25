@@ -16,7 +16,6 @@ import type { CampaignFormData } from "@/lib/campaign-types";
 import {
   type AnalyticsPeriod,
   campaignsApi,
-  type PreparePrivateFinalizationResponse,
 } from "@/lib/api/campaigns";
 import { type GetAccessToken } from "@/lib/api/client";
 
@@ -366,56 +365,6 @@ export function useCampaignActions() {
     [getToken],
   );
 
-  const setupCampaignPrivacy = useCallback(
-    async (
-      id: string,
-      payload: { viewingKeyRegistered?: boolean; viewingKeyReference?: string } = {},
-    ) => {
-      const updated = await campaignsApi.setupPrivacy(getToken, id, payload);
-      emitRefresh();
-      return updated;
-    },
-    [getToken],
-  );
-
-  const confirmPrivacyDeposit = useCallback(
-    async (id: string, txHash: string) => {
-      const updated = await campaignsApi.confirmPrivacyDeposit(getToken, id, txHash);
-      emitRefresh();
-      return updated;
-    },
-    [getToken],
-  );
-
-  const confirmPrivacyWithdraw = useCallback(
-    async (id: string, txHash: string, withdrawAmountAtomic: string) => {
-      const updated = await campaignsApi.confirmPrivacyWithdraw(
-        getToken,
-        id,
-        txHash,
-        withdrawAmountAtomic,
-      );
-      emitRefresh();
-      return updated;
-    },
-    [getToken],
-  );
-
-  const preparePrivateFinalization = useCallback(
-    (id: string, feePayer?: string): Promise<PreparePrivateFinalizationResponse> =>
-      campaignsApi.preparePrivateFinalization(getToken, id, feePayer),
-    [getToken],
-  );
-
-  const confirmPrivateFinalization = useCallback(
-    async (id: string, txHash: string) => {
-      const updated = await campaignsApi.confirmPrivateFinalization(getToken, id, txHash);
-      emitRefresh();
-      return updated;
-    },
-    [getToken],
-  );
-
   return useMemo(
     () => ({
       createCampaign,
@@ -427,28 +376,18 @@ export function useCampaignActions() {
       prepareCampaignFunding,
       relayCampaignFunding,
       confirmCampaignFunding,
-      setupCampaignPrivacy,
-      confirmPrivacyDeposit,
-      confirmPrivacyWithdraw,
-      preparePrivateFinalization,
-      confirmPrivateFinalization,
       solanaChain: SOLANA_CHAIN,
     }),
     [
       confirmCampaignFunding,
       confirmCampaignInitialization,
-      confirmPrivacyDeposit,
-      confirmPrivacyWithdraw,
-      confirmPrivateFinalization,
       createCampaign,
       editCampaign,
       pauseCampaign,
       prepareCampaignFunding,
       prepareCampaignInitialization,
-      preparePrivateFinalization,
       relayCampaignFunding,
       removeCampaign,
-      setupCampaignPrivacy,
     ],
   );
 }
@@ -462,6 +401,5 @@ export function campaignToForm(campaign: CampaignRecord): CampaignFormData {
     intentCategory: campaign.intentCategory,
     totalBudget: campaign.monthlyBudget,
     queryBid: campaign.maxBidPerDecision || 0.5,
-    privacyMode: campaign.privacyMode,
   };
 }
